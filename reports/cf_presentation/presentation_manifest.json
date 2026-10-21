@@ -1,0 +1,17 @@
+{
+  "selected_n_neighbors": 10,
+  "source_selection_sha256": "6baab18c01c0f44d1e86bec12847494e10662d297414541d8b12a41bbd4df431",
+  "chart_files": [
+    "01_accuracy_all_users.png",
+    "02_accuracy_positive_history.png",
+    "03_catalog_coverage.png",
+    "04_popular_only_lists.png",
+    "05_ndcg10_confidence_interval.png"
+  ],
+  "metadata_status": "Đã đọc tên sản phẩm từ Product_Metadata và lưu bản tra cứu.",
+  "metadata_lookup_rows": 112590,
+  "demo_user_id": "AHOUEEGPXZY52O7RHMG5VR76IKJA",
+  "demo_k": 10,
+  "demo_cf_positions": 1,
+  "demo_missing_product_titles": 0
+}

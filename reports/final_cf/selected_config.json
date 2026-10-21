@@ -1,0 +1,54 @@
+{
+  "created_at_utc": "2026-10-21T06:25:28.125542+00:00",
+  "algorithm": "binary_item_cosine_with_popular_fallback",
+  "neighbor_grid": [
+    10,
+    20,
+    50,
+    100
+  ],
+  "selected_n_neighbors": 10,
+  "positive_rating_threshold": 4.0,
+  "block_size": 1024,
+  "k_values": [
+    10,
+    20
+  ],
+  "primary_metric": "NDCG@10",
+  "primary_group": "Toàn bộ",
+  "tie_breakers": [
+    "Recall@10 descending",
+    "n_neighbors ascending"
+  ],
+  "selection_data": "validation",
+  "final_fit_data": "train + validation",
+  "selected_validation_metrics": {
+    "model": "ItemCF + Popular fallback",
+    "k": 10,
+    "group": "Toàn bộ",
+    "users": 85951,
+    "Precision@K": 0.001436865190631872,
+    "Recall@K": 0.014131792145136957,
+    "NDCG@K": 0.006657956421292206,
+    "CatalogCoverage@K": 0.08980990724696769,
+    "CF_slot_fraction": 0.02208816651347861,
+    "popular_only_list_fraction": 0.9651894684180522,
+    "n_neighbors": 10
+  },
+  "split_config": {
+    "split_method": "global_chronological",
+    "train_end_timestamp_ms": 1607221537757,
+    "validation_end_timestamp_ms": 1643201980125,
+    "positive_rating_threshold": 4.0,
+    "item_column": "parent_asin"
+  },
+  "train_fingerprint": "c15598569f59eeb132b8cbfe9fab4bd568594b85300c35000189a9fe7b79e583",
+  "validation_fingerprint": "be71ffc6fa5c99c09ca0e3b86174b8d16457ca86620cc484837a071525da1281",
+  "versions": {
+    "python": "3.12.10",
+    "pandas": "3.0.6",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "sklearn": "1.9.1"
+  }
+}

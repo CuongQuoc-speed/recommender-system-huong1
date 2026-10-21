@@ -1,0 +1,10 @@
+{
+  "users": 85951,
+  "users_with_positive_history": 4392,
+  "novel_positive_pairs": 91672,
+  "excluded_seen_pairs": 18,
+  "positive_pairs_with_items_unseen_in_history": 41801,
+  "history_catalog_items": 78488,
+  "history_rows": 485977,
+  "positive_threshold": 4.0
+}

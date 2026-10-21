@@ -1,0 +1,11 @@
+{
+  "rows": 624827,
+  "users_with_any_history": 571069,
+  "users_with_positive_history": 414462,
+  "catalog_items": 102963,
+  "positive_pairs": 448557,
+  "neighbor_edges": 81689,
+  "fit_seconds": 8.710459800000535,
+  "history_end_timestamp_ms": 1643201980125,
+  "training_fingerprint": "a99e00b28ecfc4d2254b6b653015e82c576e8d91350267ce0e2f7c2a7e0ac903"
+}

@@ -1,0 +1,14 @@
+{
+  "users": 43656,
+  "users_with_positive_history": 2533,
+  "novel_positive_pairs": 46222,
+  "excluded_seen_pairs": 20,
+  "positive_pairs_with_items_unseen_in_history": 16505,
+  "test_rows": 69425,
+  "history_catalog_items": 102963,
+  "history_end_timestamp_ms": 1643201980125,
+  "test_start_timestamp_ms": 1643202300263,
+  "test_end_timestamp_ms": 1694219976666,
+  "selection_sha256": "6baab18c01c0f44d1e86bec12847494e10662d297414541d8b12a41bbd4df431",
+  "test_fingerprint": "cdf737d38647a5d8c00f96f17a6d012b3443c6448e731d436a42f939cc99cc24"
+}

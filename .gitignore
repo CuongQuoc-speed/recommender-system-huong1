@@ -1,0 +1,33 @@
+# Python environment and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Source data and reproducible intermediate/model files
+/data/
+/models/
+*.xlsx
+*.xls
+*.xlsm
+*.parquet
+*.jsonl
+*.npz
+
+# Large metrics by individual user; retain aggregate reports and figures
+reports/**/test_per_user.csv*
+reports/**/validation_per_user.csv*
+
+# Local settings and credentials
+.env
+.env.*
+!.env.example
+.vscode/
+
+# OS temporary files
+.DS_Store
+Thumbs.db
+~$*

@@ -1,0 +1,7 @@
+{
+  "users_with_ground_truth": 85951,
+  "users_with_positive_training_history": 4392,
+  "novel_positive_pairs": 91672,
+  "excluded_previously_reviewed_pairs": 18,
+  "positive_pairs_with_items_unseen_in_train": 41801
+}

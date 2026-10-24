@@ -91,13 +91,15 @@ Thử **N = 10, 20, 50, 100** trên validation; chọn theo NDCG@10 toàn bộ n
 
 Notebook 03 mới giữ mã tính baseline và quy tắc đánh giá. Khi Run All, các tệp baseline đang có được sao lưu trước vào `models/baseline_archive/<thời điểm chạy>/`, rồi baseline được chạy lại theo mã cũ. Chỉ dời bước giải phóng train/validation đến sau khi tạo trọng số temporal. Notebook 01, 02, 04 và các hình baseline của notebook 04 được giữ nguyên.
 
-## 4. Khoảng trống và thí nghiệm thời gian trong notebook 03
+## 4. Vấn đề thực nghiệm, khoảng trống còn lại và định hướng phát triển
 
-### 4.1. Vấn đề cần kiểm chứng
+### 4.1. Vấn đề được kiểm chứng bằng thí nghiệm thời gian
 
 Baseline đã chia dữ liệu theo thời gian nhưng coi các tương tác tích cực trong lịch sử có cùng trọng số. **Chia tập theo thời gian chưa đồng nghĩa thuật toán đã dùng thời gian để chấm điểm.**
 
 Thí nghiệm bổ sung kiểm tra việc ưu tiên các review gần đây có làm thay đổi thứ hạng và cải thiện khả năng khôi phục sản phẩm tích cực trong tương lai hay không. Đây là một phép thử cụ thể trên dữ liệu của dự án, chưa phải tuyên bố một khoảng trống nghiên cứu mới đã được xác nhận bằng tổng quan tài liệu.
+
+Mục 4.1 mô tả vấn đề đã được đưa vào thực nghiệm của Hướng 1. **Khoảng trống còn lại sau khi hoàn thành Hướng 1 và lý do phát triển sang Hướng 2 được trình bày riêng tại mục 4.5.**
 
 ### 4.2. Time-decay ItemCF
 
@@ -146,6 +148,15 @@ Notebook báo cáo riêng ba nhóm này, toàn bộ người dùng đủ điều
 Đo tỷ lệ danh sách thay đổi so với ItemCF, số ứng viên CF trong Top-K, tỷ lệ vị trí do CF tạo và tỷ lệ danh sách hoàn toàn fallback. Nếu nhóm từ 2 sản phẩm có ít người, cần đọc kết quả cùng số lượng người dùng và khoảng tin cậy, tránh suy rộng.
 
 Temporal weighting không tạo lịch sử cho người mới hoặc đưa sản phẩm ngoài catalog lịch sử vào ứng viên. Nếu không có review mới, việc dịch chung mốc dự đoán chỉ nhân tất cả đóng góp của một người dùng theo cùng hệ số, nên chưa tạo ra thay đổi thứ hạng theo thời gian một cách độc lập.
+
+### 4.5. Khoảng trống còn lại và định hướng phát triển (chuyển sang Hướng 2)
+
+- **Khoảng trống của Hướng 1:** ItemCF, kể cả phiên bản có trọng số thời gian, vẫn dựa trên lịch sử tương tác và sự đồng xuất hiện của sản phẩm. Mô hình chưa khai thác thuộc tính, ngữ nghĩa và quan hệ sản phẩm từ metadata. Khi dữ liệu rất thưa, những sản phẩm ít có tương tác chung khó hình thành liên kết CF; người dùng thiếu lịch sử vẫn phụ thuộc nhiều vào Most Popular. Time-decay chỉ điều chỉnh đóng góp của lịch sử đã có, chưa bổ sung tri thức về sản phẩm để bù cho thiếu tương tác.
+- **Định hướng phát triển — Hướng 2:** Xây dựng đồ thị tri thức từ metadata sản phẩm, chẳng hạn thương hiệu, danh mục và các thuộc tính có trong dữ liệu; khai thác quan hệ này để bổ sung thông tin và nguồn ứng viên ngoài liên kết đồng tương tác của CF. Kết hợp với baseline và điểm số của Hướng 1 để kiểm tra khả năng gợi ý khi lịch sử tương tác ít, đồng thời đánh giá chất lượng và độ phủ theo quy trình chung. Hướng 2 cần sử dụng thêm metadata chung của nhóm; gói bàn giao Hướng 1 cung cấp mô hình, ứng viên và điểm làm đầu vào, mốc đối chiếu.
+
+**Bằng chứng từ thực nghiệm Hướng 1:** khoảng 95,94% danh sách Top-10 vẫn hoàn toàn dùng Most Popular; thời gian chỉ làm đổi thứ hạng ở nhóm có từ 2 sản phẩm tích cực và chưa có bằng chứng rõ về cải thiện NDCG@10. Những kết quả này cho thấy giới hạn của việc chỉ dùng tương tác và trọng số thời gian, tạo cơ sở thực nghiệm để kiểm tra phần bổ sung tri thức sản phẩm ở Hướng 2. Hiệu quả của đồ thị cần được đo bằng thực nghiệm, không được mặc định sẽ cải thiện.
+
+Thời gian trong Hướng 1 được dùng ở mức trọng số lịch sử ItemCF; mô hình này chưa biểu diễn sản phẩm và quan hệ bằng đồ thị tri thức. Vì vậy, phần thực nghiệm temporal đã hoàn thành và khoảng trống về tri thức sản phẩm còn lại là hai nội dung riêng trong quy trình phát triển của nhóm.
 
 ## 5. Quy trình đánh giá và kết quả baseline đã có
 
@@ -383,6 +394,8 @@ Leader có thể xem ngay [báo cáo temporal](reports/temporal_cf/temporal_summ
 Đã hoàn thành phần thực nghiệm **Temporal Recommendation Baseline** gồm chuẩn bị dữ liệu, Most Popular, ItemCF, một phép thử time-decay trực tiếp vào điểm ứng viên, đánh giá test và phân tích cá nhân hóa theo độ dày lịch sử. Bốn notebook được giữ trong quy trình; baseline và các báo cáo trước vẫn là mốc đối chiếu.
 
 Cấu hình chọn là **N = 10, h = 180 ngày**. Trên nhóm có từ 2 sản phẩm tích cực, thời gian làm thay đổi Top-10 ở **379/683 người dùng (55,49%)**. NDCG@10 toàn bộ tăng từ **0,00740466 lên 0,00740848**, nhưng khoảng tin cậy chứa 0 nên **chưa có bằng chứng rõ về cải thiện chất lượng gợi ý**. Đóng góp của thí nghiệm là kiểm chứng tác động thực tế của thời gian và chỉ ra giới hạn do dữ liệu rất thưa, không mặc định mô hình temporal sẽ tốt hơn.
+
+Khoảng trống còn lại của Hướng 1 là mô hình chưa khai thác thuộc tính và quan hệ sản phẩm để bổ sung thông tin khi tương tác thưa. Đây là cơ sở chuyển sang Hướng 2 dùng đồ thị tri thức; phần việc này được nêu rõ tại mục 4.5, còn ItemCF và time-decay tiếp tục giữ vai trò baseline để đối chiếu.
 
 Đã tạo gói gồm hai mô hình, module nạp độc lập và **8.731.200 dòng ứng viên/điểm/thứ hạng** cho bước tiếp theo của Member 2; kiểm tra nạp lại thành công. Cần gửi riêng tệp `models/member2_handoff.zip` cho Member 2. Thuật toán giảm popularity bias không thuộc trách nhiệm chính của phần này; kết quả hiện tại chưa chứng minh hiệu quả doanh thu hay công bằng theo cửa hàng.
 

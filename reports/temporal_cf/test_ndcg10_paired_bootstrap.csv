@@ -1,0 +1,6 @@
+﻿group,users,k,mean_NDCG_delta_temporal_minus_static,CI95_low,CI95_high,CI_contains_zero,bootstrap_resamples
+Toàn bộ,43656,10,3.8177264675340546e-06,0.0,1.5270905870136218e-05,True,1000
+Có lịch sử tích cực,2533,10,6.579813133307015e-05,0.0,0.00019739439399921041,True,1000
+0 sản phẩm tích cực,41123,10,0.0,0.0,0.0,True,1000
+1 sản phẩm tích cực,1850,10,0.0,0.0,0.0,True,1000
+Từ 2 sản phẩm tích cực,683,10,0.00024402147388970233,0.0,0.0007320644216691069,True,1000

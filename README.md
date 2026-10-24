@@ -1,120 +1,69 @@
-# Hướng 1 — Quá trình thực hiện, nội dung và tổng kết phần baseline khuyến nghị
+# Hướng 1 — Temporal Recommendation Baseline
 
 **Người thực hiện: Cường Quốc**  
-**Thời điểm tổng hợp: 21/10/2026**  
-**Phần đã triển khai:** chuẩn bị dữ liệu, Most Popular, Item-based Collaborative Filtering, đánh giá và minh họa kết quả.
+**Cập nhật: 24/10/2026**  
+Đề tài chung: Hệ thống khuyến nghị thương mại điện tử dựa trên đồ thị tri thức thời gian và mô hình ngôn ngữ.
 
-**Mục tiêu nghiên cứu tiếp theo của hướng 1:** kiểm chứng và giảm sự tập trung gợi ý vào sản phẩm phổ biến, đồng thời giữ độ phù hợp với người dùng. **Trạng thái:** đã hoàn thành phần dữ liệu và baseline CF; đánh giá chuyên biệt về độ phổ biến và phương pháp giảm thiên vị chưa được triển khai trong bốn notebook hiện tại.
+Phần việc này xây dựng mốc so sánh bằng Most Popular và Item-based Collaborative Filtering (ItemCF), sau đó bổ sung một thí nghiệm để thời gian tác động trực tiếp đến điểm gợi ý. Đầu ra gồm mô hình, kết quả đánh giá, phân tích giới hạn cá nhân hóa và danh sách ứng viên có điểm xếp hạng cho Member 2.
 
-Phần việc này thuộc đề tài hệ thống khuyến nghị thương mại điện tử kết hợp đồ thị tri thức thời gian và mô hình ngôn ngữ. Bộ notebook hiện tại tạo mốc so sánh thực nghiệm để nhóm đánh giá lợi ích của các phần mở rộng KG/TKG và LLM trong giai đoạn tiếp theo.
-
-## 1. Quá trình thực hiện
-
-### 1.1. Xác định bài toán và mục tiêu
-
-Mục tiêu kinh doanh của đề tài là giúp cửa hàng có thêm cơ hội tiếp cận khách hàng và bán hàng. Với dữ liệu review hiện có, giai đoạn đầu được cụ thể hóa thành bài toán **xếp hạng Top-10/Top-20 sản phẩm có khả năng phù hợp với người dùng**, dựa trên lịch sử đánh giá.
-
-Quá trình triển khai đi từ phương pháp đơn giản Most Popular đến ItemCF, sau đó kiểm tra xem cá nhân hóa có cải thiện chất lượng xếp hạng và mở rộng danh mục được gợi ý hay không. Các chỉ số offline từ review được dùng làm bằng chứng thực nghiệm; hiệu quả về lượt mua và doanh thu cần được kiểm chứng riêng khi có dữ liệu kinh doanh phù hợp.
-
-### 1.2. Khoảng trống và phạm vi nghiên cứu của hướng 1
-
-#### 1.2.1. Vấn đề và căn cứ nghiên cứu
-
-Vấn đề kinh doanh cần kiểm chứng là: các sản phẩm ít phổ biến nhưng phù hợp có thể thiếu cơ hội được người dùng khám phá khi danh sách gợi ý tập trung vào sản phẩm đã có nhiều tương tác. Trong phạm vi dữ liệu hiện tại, cơ hội tiếp cận được đo bằng **sự xuất hiện trong danh sách Top-K được mô phỏng offline**, chưa phải số lượt hiển thị thực tế, đơn hàng hay doanh thu.
-
-Thiên vị độ phổ biến và phương pháp tái xếp hạng để tăng sự hiện diện của sản phẩm ít phổ biến đã được nghiên cứu. Vì vậy, đề tài **không xem việc dùng CF hoặc tái xếp hạng là một thuật toán mới**. Hai tài liệu nền liên quan trực tiếp là:
-
-| Nghiên cứu | Nội dung liên quan đến hướng 1 |
+| Hạng mục | Trạng thái của phiên bản này |
 | --- | --- |
-| Abdollahpouri, Burke và Mobasher (2019), [Managing Popularity Bias in Recommender Systems with Personalized Re-ranking](https://arxiv.org/abs/1901.07555) | Đề xuất tái xếp hạng nhằm tăng sự hiện diện của sản phẩm ít phổ biến, có xét đánh đổi với độ chính xác |
-| Abdollahpouri và cộng sự (2021), [User-centered Evaluation of Popularity Bias in Recommender Systems](https://arxiv.org/abs/2103.06364) | Chỉ ra hạn chế của cách đánh giá tổng hợp khi chưa xét mức quan tâm đến sản phẩm phổ biến của từng nhóm người dùng |
+| Chuẩn bị dữ liệu, Most Popular, ItemCF, đánh giá và biểu đồ baseline | Đã có kết quả từ lần chạy trước; giữ lại làm mốc so sánh |
+| Time-decay ItemCF trong notebook 03 | Đã bổ sung mã chọn tham số, huấn luyện, đánh giá và báo cáo |
+| Phân tích nhóm có 0, 1 và từ 2 sản phẩm tích cực trong lịch sử | Đã bổ sung mã; tự xuất số liệu sau khi chạy |
+| Bàn giao mô hình, Top-100 ứng viên và điểm cho Member 2 | Đã bổ sung bước xuất module Python, mô hình, CSV nén, cấu hình và ZIP |
+| Kết quả temporal trên dữ liệu All Beauty đầy đủ | **Chờ Run All notebook 03 trên dữ liệu thật; chưa công bố số liệu mới** |
 
-#### 1.2.2. Khoảng trống thực nghiệm của dự án
+Mã phần mở rộng được kiểm tra bằng dữ liệu mô phỏng. Việc kiểm tra này xác nhận quy trình và các trường hợp quan trọng; không thay thế đánh giá trên dữ liệu All Beauty của dự án.
 
-**Trên bộ All Beauty và quy trình chia theo thời gian đang dùng, dự án chưa kiểm chứng liệu có thể tăng cơ hội được gợi ý của sản phẩm ít phổ biến bằng tái xếp hạng sau CF, trong khi vẫn giữ mức chất lượng xếp hạng chấp nhận được, đặc biệt khi nhiều người dùng có rất ít lịch sử.** Đây là câu hỏi thực nghiệm của dự án; tính mới so với toàn bộ tài liệu nghiên cứu cần tiếp tục được đối chiếu, chưa được khẳng định từ hai tài liệu nền trên.
+## 1. Bài toán và phạm vi được phân công
 
-Các bằng chứng hiện có giúp xác định vấn đề, nhưng chưa trả lời câu hỏi đó:
+Mục tiêu kinh doanh chung là giúp cửa hàng tiếp cận khách hàng và tăng cơ hội bán hàng. Với dữ liệu review hiện có, nhiệm vụ được cụ thể hóa thành **xếp hạng Top-10/Top-20 sản phẩm phù hợp với lịch sử đánh giá**, đồng thời xuất Top-100 ứng viên để bước tiếp theo có thể xếp hạng lại.
 
-| Quan sát đã có | Điều chưa thể kết luận |
-| --- | --- |
-| Khoảng 93,19% người dùng trong toàn bộ dữ liệu chỉ có một review | Thông tin cá nhân hóa hạn chế; chưa biết phương pháp giảm thiên vị sẽ hữu ích cho nhóm nào |
-| Ở Top-10 trên test, khoảng 95,94% danh sách của ItemCF hoàn toàn lấy từ Most Popular | Đây là tỷ lệ phụ thuộc fallback, chưa phải tỷ lệ sản phẩm thuộc nhóm phổ biến trong danh sách |
-| Catalog coverage tăng từ khoảng 0,0107% lên 5,8720% | Độ phủ tăng chưa cho biết các vị trí gợi ý phân bổ thế nào giữa sản phẩm phổ biến và ít phổ biến |
-| Khoảng tin cậy chênh lệch NDCG@10 chứa 0 | Chưa có bằng chứng rõ về cải thiện chất lượng xếp hạng của baseline CF |
+Theo yêu cầu leader, phần việc của Cường Quốc gồm:
 
-Ba câu hỏi cần trả lời tiếp:
+- Giữ bốn notebook và các kết quả baseline đã có.
+- Bổ sung tối thiểu một thí nghiệm mà yếu tố thời gian tác động trực tiếp đến thuật toán.
+- Phân tích khả năng và giới hạn cá nhân hóa khi dữ liệu rất thưa.
+- Bàn giao mô hình baseline, danh sách ứng viên và điểm xếp hạng cho Member 2.
 
-- **RQ1:** Most Popular và ItemCF phân bổ các vị trí Top-K giữa sản phẩm phổ biến và ít phổ biến như thế nào?
-- **RQ2:** Tái xếp hạng có tăng tỷ lệ và độ phủ sản phẩm ít phổ biến, với mức giảm NDCG@10 nằm trong giới hạn thực nghiệm đã đặt trước hay không?
-- **RQ3:** Kết quả khác nhau thế nào giữa nhóm có lịch sử tích cực và nhóm phải dùng gợi ý phổ biến; giới hạn của tập ứng viên CF ảnh hưởng ra sao?
+Thuật toán giảm popularity bias không thuộc trách nhiệm chính của phần này. Most Popular, tỷ lệ fallback và độ phủ được dùng để so sánh, chẩn đoán mô hình. Việc xây dựng Temporal KG và LLM được thực hiện trong các phần việc tiếp theo của nhóm.
 
-#### 1.2.3. Phương án kiểm chứng tiếp theo — chưa triển khai
+Các chỉ số offline từ review chưa chứng minh mức tăng doanh thu, lượt mua hoặc hiệu quả tiếp cận của cửa hàng. Những kết luận đó cần log kinh doanh và thí nghiệm phù hợp.
 
-1. **Định nghĩa độ phổ biến từ lịch sử huấn luyện:** `pop(i)` là số người dùng khác nhau đánh giá sản phẩm `i` từ 4 sao trở lên. Quy ước ban đầu: xếp theo `pop(i)` giảm dần, đồng hạng theo mã sản phẩm; lấy 20% số sản phẩm đầu làm nhóm phổ biến (head), phần còn lại làm nhóm ít phổ biến (tail). Đây là quy ước thử nghiệm, cần kiểm tra độ nhạy, không phải định nghĩa công bằng phổ quát. Khi đánh giá validation dùng train; khi đánh giá test dùng train + validation, không dùng tương tác test để phân nhóm.
-2. **Bổ sung chỉ số cho các baseline hiện có:** đo độ phổ biến trung bình của sản phẩm được gợi ý, tỷ lệ vị trí dành cho tail và độ phủ riêng của tail. Báo cáo trên cùng người dùng, danh mục và cách loại sản phẩm đã xem như thực nghiệm hiện tại.
-3. **Thử tái xếp hạng ứng viên CF:** lấy tối đa 100 ứng viên có điểm CF dương nếu có; chuẩn hóa điểm phù hợp theo người dùng rồi trừ một thành phần phạt dựa trên `log(1 + pop(i))` đã chuẩn hóa. Thử trọng số phạt `lambda` bằng 0; 0,05; 0,10; 0,20 trên validation. Khi `lambda = 0`, kiểm tra danh sách phải trùng baseline gốc. Phần bổ sung Most Popular được giữ cùng quy tắc; nhóm không có ứng viên CF vẫn dùng fallback và phải báo cáo riêng. Tái xếp hạng không tạo được sản phẩm ngoài tập ứng viên; nếu thay số lân cận hoặc cách sinh ứng viên, phải có thêm baseline cùng cấu hình để tách tác động.
-4. **Chọn phương án theo cả độ phù hợp và khả năng khám phá:** mục tiêu thử nghiệm ban đầu là tăng tỷ lệ tail, đồng thời NDCG@10 giảm không quá 5% tương đối so với ItemCF gốc trên validation ở cả nhóm toàn bộ và nhóm có lịch sử tích cực. Mức 5% là ngưỡng đề xuất, chưa phải yêu cầu doanh nghiệp đã được xác nhận. Nếu không có cấu hình thỏa điều kiện thì báo cáo kết quả đó, không mặc định tăng tail là thành công.
-5. **Cố định cấu hình rồi đánh giá:** không dùng test để chọn trọng số. Do kết quả test baseline đã được xem trước khi hình thành bước mở rộng này, cần công bố đây là phân tích mở rộng và cân nhắc một mốc thời gian giữ lại khác để kiểm chứng thêm trước khi kết luận khả năng khái quát.
+## 2. Quá trình và nội dung thực hiện
 
-#### 1.2.4. Cách đo và kết quả cần bàn giao
+| Bước | Nội dung | Kết quả |
+| --- | --- | --- |
+| 1 | Kiểm tra dữ liệu đã làm sạch, xác định trường lõi và ý nghĩa timestamp | Bộ dữ liệu dùng thống nhất cho thực nghiệm |
+| 2 | Chuẩn hóa kiểu dữ liệu và chia theo thời gian toàn cục | Train/validation/test dạng Parquet và cấu hình chia tập |
+| 3 | Xây Most Popular và ItemCF bằng ma trận thưa | Baseline chạy CPU, hướng tới máy RAM 16 GB |
+| 4 | Thử số lân cận N trên validation, chốt cấu hình rồi đánh giá test | Bảng chỉ số, bootstrap, mô hình cuối và ví dụ gợi ý |
+| 5 | Tạo biểu đồ và minh họa có tên sản phẩm | Các tệp trình bày baseline trong notebook 04 |
+| 6 | Bổ sung trọng số thời gian vào lịch sử ItemCF trong notebook 03 | Mã thí nghiệm temporal, đánh giá theo nhóm lịch sử và báo cáo riêng |
+| 7 | Chuẩn hóa bàn giao cho Member 2 | Mã nạp mô hình, hai biến thể, ứng viên/điểm/thứ hạng và manifest; được tạo khi notebook chạy xong |
 
-| Chỉ số | Định nghĩa và cách diễn giải |
-| --- | --- |
-| Precision@K, Recall@K, NDCG@K | Độ phù hợp và chất lượng xếp hạng; đối chiếu với baseline trên cùng nhóm người dùng |
-| CatalogCoverage@K | Số sản phẩm khác nhau được gợi ý chia cho danh mục lịch sử; đã có trong baseline |
-| Average Recommendation Popularity (ARP) | Trung bình `pop(i)` của sản phẩm trong Top-K, rồi lấy trung bình theo người dùng; giảm ARP chỉ cho thấy danh sách bớt tập trung vào sản phẩm nhiều tương tác |
-| TailShare@K | Số sản phẩm thuộc tail trong Top-K chia cho K, rồi lấy trung bình theo người dùng |
-| TailCoverage@K | Số sản phẩm tail khác nhau được gợi ý chia cho tổng số sản phẩm tail trong danh mục lịch sử |
+### 2.1. Dữ liệu đã kiểm tra
 
-Các chỉ số mới được tính cho cùng hai nhóm đã dùng trong baseline; nêu rõ số người dùng mỗi nhóm. Sản phẩm mới chưa có trong danh mục lịch sử vẫn được giữ trong ground truth và tính là miss như quy trình hiện tại, không tự gán là tail có thể gợi ý. ARP giảm hoặc TailShare tăng chưa tự chứng minh phù hợp hơn hay công bằng hơn; cần đọc cùng chỉ số chất lượng và giới hạn của phép đánh giá.
+Nguồn thực nghiệm là `All_Beauty_Cleaned_Merged.xlsx` đã được nhóm làm sạch và ghép metadata. Các số dưới đây là kết quả kiểm tra của lần chạy dữ liệu trước đó.
 
-Đầu ra dự kiến gồm bảng phân nhóm sản phẩm, bảng so sánh baseline/tái xếp hạng, biểu đồ đánh đổi NDCG–TailShare, cấu hình được chọn và kết quả độ bất định. **Các đầu ra này chưa có trong repository hiện tại; các bảng ở mục 3 là kết quả baseline, chưa phải kết quả giảm thiên vị.**
-
-#### 1.2.5. Phạm vi đóng góp và liên hệ với đề tài chung
-
-| Phần việc | Trạng thái |
-| --- | --- |
-| Chuẩn bị dữ liệu, chia theo thời gian, Most Popular, ItemCF, đánh giá và minh họa | Đã hoàn thành baseline bằng notebook 01–04 |
-| Xác lập vấn đề, câu hỏi nghiên cứu và kế hoạch kiểm chứng | Được bổ sung trong README này |
-| Đo ARP/TailShare/TailCoverage và thực nghiệm tái xếp hạng | Chưa triển khai |
-| Chứng minh cải thiện lượt mua, doanh thu hoặc công bằng giữa các cửa hàng | Chưa có dữ liệu và thực nghiệm phù hợp để kết luận |
-
-Hướng 1 hiện tập trung vào mức độ phổ biến của **sản phẩm** và chất lượng gợi ý. Đánh giá công bằng giữa **cửa hàng** cần định danh cửa hàng đáng tin cậy; không suy ra trực tiếp từ tên thương hiệu hoặc trường `store`. KG/TKG và LLM là các phần có thể bổ sung thông tin và hỗ trợ các trường hợp CF khó xử lý ở giai đoạn sau; bốn notebook hiện tại chưa triển khai các thành phần đó.
-
-### 1.3. Khảo sát và kiểm tra lại dữ liệu
-
-Sử dụng file nhóm đã làm sạch và ghép metadata: **`All_Beauty_Cleaned_Merged.xlsx`**, từ Amazon Reviews 2023 — All Beauty. Việc kiểm tra được thực hiện trên toàn bộ file đang dùng cho thí nghiệm.
-
-| Nội dung kiểm tra | Kết quả |
+| Nội dung | Kết quả |
 | --- | ---: |
-| Số bản ghi review | 694.252 |
-| Số người dùng khác nhau | 631.986 |
-| Số sản phẩm có tương tác | 112.565 |
-| Số sản phẩm trong sheet metadata | 112.590 |
+| Bản ghi review | 694.252 |
+| Người dùng khác nhau | 631.986 |
+| Sản phẩm có tương tác | 112.565 |
+| Sản phẩm trong sheet metadata | 112.590 |
 | Người dùng chỉ có một review | 588.942, khoảng 93,19% |
 | Giá trị thiếu ở bốn trường lõi | 0 |
-| Sự kiện trùng đồng thời user, item và timestamp | 0 |
+| Sự kiện trùng user, item và timestamp | 0 |
 
-Bốn trường dùng cho mô hình gồm `user_id`, `parent_asin`, `rating` và `timestamp`. ID được giữ ở dạng chuỗi để bảo toàn số 0 ở đầu; rating được xử lý ở dạng float32 và timestamp ở dạng int64, đơn vị mili giây.
+Mô hình dùng `user_id`, `parent_asin`, `rating`, `timestamp`. Giữ ID dạng chuỗi; rating dùng float32 và timestamp dùng int64, đơn vị mili giây. **Timestamp là thời điểm viết review**, không tự diễn giải thành thời điểm mua hàng.
 
-Kết quả khảo sát cho thấy phần lớn người dùng có rất ít lịch sử, làm cho ma trận user–item rất thưa. Đây là hạn chế quan trọng của dữ liệu đối với CF và là lý do cần phân tích riêng nhóm đã có lịch sử tích cực.
+Trong dữ liệu ghép, `Merged_Data.title` là tiêu đề review; `Merged_Data.product_title` và `Product_Metadata.title` dùng cho tên sản phẩm. Metadata chỉ được ghép để hiển thị ở notebook 04, không tham gia tính điểm CF trong phiên bản này.
 
-Ý nghĩa các cột tên cũng được kiểm tra: `Merged_Data.title` là tiêu đề review, `Merged_Data.product_title` là tên sản phẩm đã ghép; trong sheet `Product_Metadata`, cột `title` là tên sản phẩm. Timestamp được hiểu là thời điểm review, không tự suy diễn thành thời điểm mua hàng.
+### 2.2. Chia tập và quy tắc tương tác
 
-### 1.4. Chuẩn bị môi trường và dữ liệu xử lý
-
-Triển khai trên VS Code, Python 3.12 và Jupyter với môi trường `.venv`, hướng tới chạy CPU trên máy RAM 16 GB. Bốn trường lõi được tách ra và lưu dưới dạng Parquet để các lần thực nghiệm sau không phải đọc lại toàn bộ Excel.
-
-Quy ước thực nghiệm được thống nhất như sau:
-
-- Review có `rating >= 4` được coi là tương tác tích cực.
-- Mỗi cặp user–item tích cực được tính một lần khi tạo ma trận học và đếm số người đánh giá tích cực.
-- Các sự kiện lặp cùng cặp nhưng khác thời điểm được giữ trước khi chia dữ liệu; không xóa toàn bộ các cặp lặp trên cả dữ liệu rồi mới chia.
-- Khi gợi ý, loại sản phẩm người dùng đã đánh giá ở bất kỳ mức sao nào trong lịch sử huấn luyện.
-
-### 1.5. Chia tập theo thời gian
-
-Dữ liệu được chia theo trình tự thời gian toàn cục, với tỷ lệ xấp xỉ 70%/20%/10%. Hai mốc chia được xác định từ quantile 0,70 và 0,90 với `interpolation='nearest'`; các sự kiện có cùng timestamp được giữ cùng một phía của mốc chia.
+Chia theo thứ tự thời gian toàn cục, tỷ lệ xấp xỉ 70%/20%/10%. Các sự kiện cùng timestamp nằm cùng một phía của mốc chia.
 
 | Tập | Số review | Điều kiện timestamp, mili giây |
 | --- | ---: | --- |
@@ -122,80 +71,100 @@ Dữ liệu được chia theo trình tự thời gian toàn cục, với tỷ l
 | Validation | 138.850 | `1607221537757 < timestamp <= 1643201980125` |
 | Test | 69.425 | `timestamp > 1643201980125` |
 
-Mốc cuối train là `2020-12-06T02:25:37.757Z`; mốc cuối validation là `2022-01-26T12:59:40.125Z`. Cấu hình được lưu để các mô hình trong nhóm có thể dùng chung cách chia.
+Mốc cuối train: `2020-12-06T02:25:37.757Z`. Mốc cuối validation: `2022-01-26T12:59:40.125Z`. Notebook đọc các mốc từ `data/processed/split_config.json` và kiểm tra tính nhất quán.
 
-### 1.6. Xây dựng baseline và mô hình CF
+- Review có `rating >= 4` được xem là tương tác tích cực.
+- Mỗi cặp user–item tích cực đóng góp một lần vào ma trận nhị phân và số người dùng tích cực của sản phẩm.
+- Giữ sự kiện lặp khác timestamp trước khi chia tập; không loại toàn bộ cặp user–item trên cả dữ liệu rồi mới chia.
+- Khi gợi ý, loại mọi sản phẩm người dùng đã đánh giá trong lịch sử, ở bất kỳ mức sao nào.
+- Tại test, dùng lịch sử train + validation cố định; không cập nhật bằng review xuất hiện trong test.
 
-Trước hết xây dựng **Most Popular**: đếm số người đánh giá tích cực cho mỗi sản phẩm trong lịch sử và xếp hạng giảm dần. Đây là mốc so sánh cho phương pháp cá nhân hóa.
+## 3. Baseline giữ nguyên
 
-Tiếp theo xây dựng **Item-based Collaborative Filtering**. Ma trận user–item có giá trị 1 ở các cặp tích cực; mỗi sản phẩm được biểu diễn bằng vector người dùng đã đánh giá tích cực. Cosine được tính theo khối ma trận thưa, bỏ liên kết với chính sản phẩm và giữ tối đa N lân cận cosine dương. Cách triển khai này tránh tạo ma trận đặc giữa toàn bộ các cặp sản phẩm.
+**Most Popular:** xếp sản phẩm theo số người dùng đánh giá tích cực khác nhau trong lịch sử; nếu bằng nhau, theo `parent_asin` tăng dần.
 
-Điểm một ứng viên bằng tổng độ tương tự của ứng viên với các sản phẩm tích cực trong lịch sử người dùng. Khi không đủ ứng viên CF, danh sách được bổ sung bằng Most Popular. Vì vậy tên phương pháp trong kết quả được ghi là **ItemCF + Popular fallback**.
+**ItemCF + Popular fallback:** tạo ma trận user–item nhị phân, tính cosine giữa sản phẩm, bỏ liên kết với chính sản phẩm và giữ tối đa N lân cận có cosine dương. Điểm ứng viên là tổng độ tương tự từ các sản phẩm tích cực trong lịch sử người dùng. Khi không đủ ứng viên CF, bổ sung Most Popular.
 
-### 1.7. Chọn tham số, đánh giá và trình bày kết quả
+Cosine được tính theo khối ma trận thưa, không tạo ma trận đặc có kích thước số sản phẩm nhân số sản phẩm. Đây là cách triển khai phù hợp hơn với giới hạn RAM của máy đang dùng; thời gian và RAM thực tế vẫn phụ thuộc dữ liệu, môi trường.
 
-Thử N = 10, 20, 50, 100 trên validation; chọn theo NDCG@10 của toàn bộ người dùng đủ điều kiện đánh giá. Nếu bằng nhau, ưu tiên Recall@10 cao hơn rồi N nhỏ hơn. **Cấu hình chọn là N = 10**, được lưu trước khi đọc test. N là số lân cận giữ lại cho mỗi sản phẩm; K = 10/20 là độ dài danh sách trả về.
+Thử **N = 10, 20, 50, 100** trên validation; chọn theo NDCG@10 toàn bộ người dùng đủ điều kiện, rồi Recall@10 cao hơn, rồi N nhỏ hơn. Lần chạy baseline trước chọn **N = 10**. N là số lân cận; K = 10/20 là số sản phẩm gợi ý, hai tham số có ý nghĩa khác nhau.
 
-Mô hình được huấn luyện lại bằng train + validation, sau đó đánh giá test với lịch sử cố định ở cuối validation. Cả độ tương tự, độ phổ biến, danh mục ứng viên và tập sản phẩm đã đánh giá đều được cập nhật từ lịch sử huấn luyện mới này.
+Notebook 03 mới giữ mã tính baseline và quy tắc đánh giá. Khi Run All, các tệp baseline đang có được sao lưu trước vào `models/baseline_archive/<thời điểm chạy>/`, rồi baseline được chạy lại theo mã cũ. Chỉ dời bước giải phóng train/validation đến sau khi tạo trọng số temporal. Notebook 01, 02, 04 và các hình baseline của notebook 04 được giữ nguyên.
 
-Cuối cùng lưu mô hình, kiểm tra nạp lại và đối chiếu danh sách Top-K; tạo 5 biểu đồ cùng ví dụ có tên sản phẩm. Tên được lấy từ `Product_Metadata` và ghép sau khi xếp hạng, nên không tác động vào điểm CF hoặc chọn tham số.
+## 4. Khoảng trống và thí nghiệm thời gian trong notebook 03
 
-## 2. Nội dung đã thực hiện và đầu ra
+### 4.1. Vấn đề cần kiểm chứng
 
-### 2.1. Các notebook triển khai
+Baseline đã chia dữ liệu theo thời gian nhưng coi các tương tác tích cực trong lịch sử có cùng trọng số. **Chia tập theo thời gian chưa đồng nghĩa thuật toán đã dùng thời gian để chấm điểm.**
 
-| Notebook | Nội dung đã làm | Đầu ra chính |
+Thí nghiệm bổ sung kiểm tra việc ưu tiên các review gần đây có làm thay đổi thứ hạng và cải thiện khả năng khôi phục sản phẩm tích cực trong tương lai hay không. Đây là một phép thử cụ thể trên dữ liệu của dự án, chưa phải tuyên bố một khoảng trống nghiên cứu mới đã được xác nhận bằng tổng quan tài liệu.
+
+### 4.2. Time-decay ItemCF
+
+Giữ cosine và số lân cận của baseline. Với mỗi cặp người dùng–sản phẩm tích cực, lấy timestamp của review tích cực mới nhất trong lịch sử, rồi tính:
+
+```text
+age_days(u,j) = (t_ref - latest_positive_timestamp(u,j)) / 86400000
+w(u,j)       = 2 ** (-age_days(u,j) / h)
+score_time(u,i) = sum_j w(u,j) * S[j,i]
+```
+
+Trong đó `S[j,i]` là độ tương tự đã giữ từ sản phẩm lịch sử j đến ứng viên i; h là chu kỳ bán rã tính bằng ngày. Khi tuổi review bằng h, trọng số bằng 0,5.
+
+| Thành phần | ItemCF baseline | Time-decay ItemCF |
 | --- | --- | --- |
-| [01_data_preparation.ipynb](01_data_preparation.ipynb) | Đọc dữ liệu, kiểm tra trường lõi, chuẩn hóa kiểu dữ liệu, chia tập theo thời gian và tạo mốc Most Popular | Các tệp trong `data/processed/`, gồm train/validation/test và `split_config.json` |
-| [02_item_based_cf.ipynb](02_item_based_cf.ipynb) | Xây ma trận thưa, tính cosine, tạo Top-K và so sánh CF ban đầu với Most Popular trên validation | Kết quả ở `reports/item_cf/`, mô hình ở `models/item_cf/` |
-| [03_tuning_and_test.ipynb](03_tuning_and_test.ipynb) | Thử N trên validation, chốt cấu hình, huấn luyện lại, đánh giá test và paired bootstrap | `reports/final_cf/` và `models/item_cf_final/` |
-| [04_results_and_demo.ipynb](04_results_and_demo.ipynb) | Vẽ biểu đồ, nạp mô hình để dự đoán, ghép tên sản phẩm, xuất ví dụ và bằng chứng CF | `reports/cf_presentation/` |
+| Cosine, số lân cận N | Học từ lịch sử nhị phân | Dùng chung với baseline tương ứng |
+| Trọng số mỗi cặp tích cực | 1 | `2 ** (-age_days / h)` |
+| Catalog, loại sản phẩm đã đánh giá | Theo lịch sử huấn luyện | Giữ giống baseline |
+| Fallback | Most Popular | Giữ giống baseline |
+| Tác động trực tiếp của thời gian | Không | Thay đóng góp vào điểm CF |
 
-### 2.2. Quy trình đánh giá chung
+Thử **h = 90, 180, 365 ngày**. Đối chứng h = ∞ dùng trọng số 1 để kiểm tra tái tạo baseline. Chỉ trọng số lịch sử được đổi; đây chưa phải mô hình Temporal KG hoặc mô phỏng cập nhật sở thích trực tuyến.
 
-Hai mô hình được đánh giá trên cùng danh mục sản phẩm xuất hiện trong lịch sử và cùng người dùng đủ điều kiện. Ground truth gồm các sản phẩm được đánh giá tích cực mới trong tập đánh giá, sau khi loại cặp user–item đã xuất hiện ở bất kỳ mức sao nào trong lịch sử.
+### 4.3. Chọn tham số và đánh giá
 
-Sản phẩm chưa có trong lịch sử vẫn được giữ ở ground truth và tính là miss nếu không gợi ý được. Người dùng không có hit vẫn nằm trong mẫu số khi lấy trung bình. Điều này giúp kết quả phản ánh cả các trường hợp khó của dữ liệu.
+1. Giữ quy tắc chọn N của baseline trên validation.
+2. Với N đã chọn, học cosine từ **train**; thử ba h hữu hạn trên validation. Mốc tính tuổi review là cuối train.
+3. Chọn h theo NDCG@10 của toàn bộ người dùng validation đủ điều kiện; nếu bằng nhau, chọn Recall@10 cao hơn, rồi h nhỏ hơn. Lưu `reports/temporal_cf/selected_config.json` **trước ô đọc test**.
+4. Học baseline cuối bằng **train + validation**; tạo ma trận trọng số temporal trên cùng lịch sử, với mốc cuối lịch sử đó.
+5. So sánh Most Popular, ItemCF và Time-decay ItemCF trên cùng test; không chọn lại N hoặc h theo test.
 
-| Chỉ số | Cách tính hoặc ý nghĩa |
+Giữ h hữu hạn được chọn để thực hiện thí nghiệm kể cả khi không vượt baseline. Kết quả không cải thiện vẫn là kết quả cần báo cáo. Baseline test đã được xem trong giai đoạn trước; đây là thí nghiệm mở rộng với tham số chọn trên validation. Một giai đoạn holdout mới sẽ giúp xác nhận độc lập hơn.
+
+### 4.4. Độ thưa và giới hạn cá nhân hóa
+
+| Nhóm theo lịch sử huấn luyện | Khả năng của temporal weighting |
+| --- | --- |
+| 0 sản phẩm tích cực | Dùng Most Popular; không có bằng chứng tích cực để cá nhân hóa bằng CF |
+| 1 sản phẩm tích cực | Mọi điểm CF cùng nhân một hệ số dương nên thứ hạng giữ nguyên |
+| Từ 2 sản phẩm tích cực khác nhau | Khác biệt thời điểm có thể đổi đóng góp tương đối; cần đo thứ hạng và chất lượng thực tế |
+
+Notebook báo cáo riêng ba nhóm này, toàn bộ người dùng đủ điều kiện và nhóm có ít nhất một sản phẩm tích cực. Số sản phẩm trong lịch sử được tính từ **train + validation**, không dùng review test để phân nhóm.
+
+Đo tỷ lệ danh sách thay đổi so với ItemCF, số ứng viên CF trong Top-K, tỷ lệ vị trí do CF tạo và tỷ lệ danh sách hoàn toàn fallback. Nếu nhóm từ 2 sản phẩm có ít người, cần đọc kết quả cùng số lượng người dùng và khoảng tin cậy, tránh suy rộng.
+
+Temporal weighting không tạo lịch sử cho người mới hoặc đưa sản phẩm ngoài catalog lịch sử vào ứng viên. Nếu không có review mới, việc dịch chung mốc dự đoán chỉ nhân tất cả đóng góp của một người dùng theo cùng hệ số, nên chưa tạo ra thay đổi thứ hạng theo thời gian một cách độc lập.
+
+## 5. Quy trình đánh giá và kết quả baseline đã có
+
+Người dùng đủ điều kiện đánh giá phải có ít nhất một sản phẩm tích cực mới trong tập đánh giá sau khi loại sản phẩm đã đánh giá trong lịch sử. Giữ sản phẩm chưa xuất hiện trong catalog lịch sử ở ground truth; nếu mô hình không gợi ý được thì tính miss. Người dùng không có hit vẫn nằm trong mẫu số.
+
+| Chỉ số | Ý nghĩa |
 | --- | --- |
 | Precision@K | Số sản phẩm liên quan trong Top-K chia cho K |
 | Recall@K | Số sản phẩm liên quan trong Top-K chia cho số sản phẩm liên quan của người dùng |
-| NDCG@K | Đánh giá thứ hạng với relevance nhị phân, chiết khấu vị trí và chuẩn hóa theo danh sách lý tưởng |
-| CatalogCoverage@K | Số sản phẩm khác nhau có trong các danh sách chia cho danh mục lịch sử |
-| `CF_slot_fraction` | Tỷ lệ vị trí trong danh sách do CF trực tiếp cung cấp |
-| `popular_only_list_fraction` | Tỷ lệ danh sách hoàn toàn lấy từ Most Popular |
+| NDCG@K | Chất lượng thứ hạng với relevance nhị phân, chiết khấu theo vị trí |
+| CatalogCoverage@K | Số sản phẩm khác nhau được gợi ý chia cho catalog lịch sử |
+| `CF_slot_fraction` | Tỷ lệ vị trí trong Top-K do CF cung cấp |
+| `popular_only_list_fraction` | Tỷ lệ danh sách hoàn toàn dùng Most Popular |
 
-Các chỉ số được tính trung bình theo người dùng và báo cáo cho hai nhóm: toàn bộ người dùng có ít nhất một sản phẩm tích cực mới, và tập con đã có ít nhất một tương tác tích cực trong lịch sử huấn luyện.
+Các chỉ số lấy trung bình theo người dùng. Phân tích độ bất định bằng paired bootstrap theo cùng người dùng, 1.000 lần, seed 42, khoảng percentile 95%. Temporal được so với ItemCF tĩnh; baseline ItemCF so với Most Popular như trước. Khoảng tin cậy không bao gồm bất định khi học lại hoặc thay đổi giai đoạn thời gian.
 
-Độ bất định của chênh lệch NDCG@10 được phân tích bằng paired bootstrap theo người dùng: ghép kết quả hai mô hình theo cùng user, lấy mẫu lại 1.000 lần với seed 42 và báo cáo khoảng percentile 95%.
+### 5.1. Số liệu baseline tham chiếu
 
-### 2.3. Lưu mô hình và minh họa gợi ý
+Các số dưới đây giữ từ lần chạy baseline trước; **không phải kết quả temporal**. Đối chiếu với CSV gốc trong `reports/final_cf/`. CSV lưu thang 0–1; các cột có ký hiệu % trong bảng đã nhân 100.
 
-Mô hình cuối lưu ma trận tương tác, ma trận lân cận, ánh xạ ID, bảng độ phổ biến, lịch sử đã đánh giá và cấu hình. Các kiểm tra gồm loại self-loop, giới hạn số lân cận, loại sản phẩm đã đánh giá, không lặp ứng viên và đối chiếu dự đoán trước/sau khi nạp lại.
-
-Ví dụ Top-K hiển thị mã sản phẩm, tên, nguồn CF/Most Popular và điểm CF. Với ứng viên CF, bảng chỉ ra sản phẩm lịch sử có đóng góp cosine lớn nhất; điểm vẫn là tổng tất cả đóng góp. Đây là bằng chứng truy lại từ phép tính mô hình, chưa phải lời giải thích bằng LLM. Điểm CF không được diễn giải thành xác suất mua hàng.
-
-### 2.4. Tệp để leader đối chiếu
-
-| Nội dung | Tệp |
-| --- | --- |
-| Cấu hình chọn trên validation | [selected_config.json](reports/final_cf/selected_config.json) |
-| Toàn bộ các cấu hình đã thử | [validation_grid.csv](reports/final_cf/validation_grid.csv) |
-| So sánh cuối trên test | [test_comparison.csv](reports/final_cf/test_comparison.csv) |
-| Chênh lệch NDCG@10 và khoảng tin cậy | [test_ndcg10_paired_bootstrap.csv](reports/final_cf/test_ndcg10_paired_bootstrap.csv) |
-| Diễn giải kèm các biểu đồ | [presentation_notes.md](reports/cf_presentation/presentation_notes.md) |
-| Gợi ý kèm tên và bằng chứng | [demo_cf_top_k.csv](reports/cf_presentation/demo_cf_top_k.csv) |
-
-Các tệp kết quả và hình cần được commit cùng README sau khi chạy notebook 03/04 để các liên kết trên GitHub mở được.
-
-## 3. Tổng kết hướng nghiên cứu
-
-### 3.1. Kết quả thực nghiệm
-
-Các số dưới đây là kết quả tham chiếu của lần chạy kiểm chứng trên file đã làm sạch. Khi bàn giao, đối chiếu với `test_comparison.csv` được xuất trên máy đang dùng. CSV gốc lưu thang 0–1; các cột có ký hiệu % trong bảng này đã nhân 100.
-
-**Toàn bộ người dùng test đủ điều kiện: 43.656 người.** Lịch sử huấn luyện cuối gồm 624.827 review và 102.963 sản phẩm.
+**Toàn bộ: 43.656 người dùng test đủ điều kiện.** Lịch sử cuối gồm 624.827 review và 102.963 sản phẩm.
 
 | Mô hình | K | Precision (%) | Recall (%) | NDCG | Catalog coverage (%) |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -204,7 +173,7 @@ Các số dưới đây là kết quả tham chiếu của lần chạy kiểm c
 | Most Popular | 20 | 0,1401 | 2,7770 | 0,01028960 | 0,0214 |
 | ItemCF + fallback | 20 | 0,1405 | 2,7850 | 0,01036184 | 6,3285 |
 
-**Nhóm có lịch sử tích cực: 2.533 người dùng.** Đây là tập con của nhóm toàn bộ, không phải một mẫu độc lập thứ hai.
+**Nhóm có lịch sử tích cực: 2.533 người dùng**, là tập con của nhóm toàn bộ.
 
 | Mô hình | K | Precision (%) | Recall (%) | NDCG |
 | --- | ---: | ---: | ---: | ---: |
@@ -213,50 +182,53 @@ Các số dưới đây là kết quả tham chiếu của lần chạy kiểm c
 | Most Popular | 20 | 0,0770 | 1,5002 | 0,00499570 |
 | ItemCF + fallback | 20 | 0,0849 | 1,6384 | 0,00624065 |
 
-### 3.2. Nhận xét từ kết quả
+Chênh lệch NDCG@10 của ItemCF trừ Most Popular trên toàn bộ là **0,00007632**, CI95% **[-0,00001416; 0,00017774]**. Khoảng này chứa 0 nên chưa có bằng chứng rõ về cải thiện NDCG@10 trong phép đánh giá đó.
 
-**Độ phủ sản phẩm tăng rõ trong lần chạy này.** Ở Top-10, Most Popular đưa 11 sản phẩm khác nhau vào các danh sách, còn ItemCF + fallback đưa 6.046 sản phẩm, trên cùng danh mục 102.963 sản phẩm. Đây là bằng chứng về việc mở rộng danh mục được khuyến nghị, phù hợp với mục tiêu tăng khả năng khám phá sản phẩm. Chỉ số này chưa cho biết phân bổ các vị trí gợi ý giữa head và tail, nên chưa thể kết luận đã giảm thiên vị độ phổ biến hoặc đạt công bằng.
+ItemCF mở rộng số sản phẩm xuất hiện ở Top-10 từ 11 lên 6.046 sản phẩm. Tuy nhiên, khoảng **95,94%** danh sách hoàn toàn lấy từ Most Popular; CF trực tiếp chỉ chiếm khoảng **2,70%** vị trí trên toàn bộ. Độ phủ cao hơn chưa chứng minh giảm popularity bias, công bằng theo cửa hàng hoặc tăng doanh thu.
 
-**Mức cải thiện NDCG@10 còn chưa rõ.** Chênh lệch trung bình của CF trừ Most Popular trên toàn bộ người dùng là **0,00007632**, với khoảng tin cậy 95% **[-0,00001416; 0,00017774]**. Khoảng này chứa 0 nên chưa có bằng chứng rõ về cải thiện NDCG@10 trong phép đánh giá hiện tại. Khoảng tin cậy của nhóm có lịch sử tích cực cũng chứa 0.
+### 5.2. Đọc kết quả temporal sau khi chạy
 
-**Phương pháp còn phụ thuộc nhiều vào fallback.** Ở Top-10, khoảng **95,94%** danh sách của CF hoàn toàn lấy từ Most Popular; các ứng viên CF trực tiếp chỉ chiếm khoảng **2,70%** tổng số vị trí trong nhóm toàn bộ. Kết quả vì vậy cần được báo cáo đúng với tên ItemCF + Popular fallback.
+Phiên bản này chưa điền số liệu temporal trên dữ liệu thật. Sau khi notebook 03 chạy thành công, dùng các tệp sau để cập nhật kết luận:
 
-![Độ phủ sản phẩm](reports/cf_presentation/figures/03_catalog_coverage.png)
-
-![Chênh lệch NDCG@10 và khoảng tin cậy](reports/cf_presentation/figures/05_ndcg10_confidence_interval.png)
-
-### 3.3. Những nội dung đã đạt được
-
-- Hoàn thành quy trình từ kiểm tra dữ liệu đến tạo Top-K, đánh giá, lưu mô hình và trình bày kết quả.
-- Xác định được baseline và một phương pháp CF có thể chạy lại theo cùng quy tắc.
-- Có bộ mốc thời gian, định nghĩa relevance, danh mục ứng viên và nhóm đánh giá để các phần KG/TKG/LLM dùng làm chuẩn so sánh.
-- Chỉ ra hạn chế thực tế của dữ liệu ít lịch sử và sản phẩm mới bằng số liệu, thay vì chỉ kỳ vọng mô hình phức tạp hơn sẽ tốt hơn.
-- Có bảng kết quả, 5 biểu đồ, danh sách gợi ý kèm tên và bằng chứng CF để leader kiểm tra hoặc dùng khi báo cáo.
-
-### 3.4. Hạn chế và các phần cần phát triển tiếp
-
-| Vấn đề hiện tại | Ý nghĩa và hướng tiếp theo |
+| Nội dung cần đối chiếu | Tệp |
 | --- | --- |
-| Chưa đo ARP, TailShare và TailCoverage; chưa thử phương pháp giảm thiên vị | Triển khai phép kiểm chứng ở mục 1.2; phân biệt kết quả baseline với kết quả của phương pháp mở rộng |
-| Phần lớn người dùng có ít lịch sử | Nghiên cứu cách bổ sung thông tin sản phẩm và quan hệ đã xác minh để hỗ trợ các trường hợp CF khó cá nhân hóa |
-| Khoảng 35,71% cặp tích cực mới trong test có sản phẩm chưa có trong lịch sử | CF hiện tại không đưa được các sản phẩm đó vào danh sách; đây là trường hợp cần xem xét phương pháp có thông tin nội dung/KG |
-| Dữ liệu thuộc tính chưa đầy đủ, `categories` trong metadata đang rỗng | Kiểm tra thuộc tính thực có, chuẩn hóa thực thể và quan hệ trước khi dựng đồ thị; không tự đồng nhất `store` với thương hiệu hoặc ID cửa hàng |
-| Hiện dùng chia tập theo thời gian và mô hình cố định trong test | Mô hình khai thác độ mới tương tác hoặc TKG cần được xây dựng và đánh giá riêng; chia theo thời gian chưa đồng nghĩa với TKG |
-| LLM chưa tham gia quy trình CF hiện tại | Chốt một nhiệm vụ cụ thể như trích xuất thuộc tính có kiểm chứng hoặc tạo giải thích từ bằng chứng; đánh giá chất lượng và chi phí riêng |
-| Độ phủ sản phẩm chưa đo công bằng theo cửa hàng | Cần định danh cửa hàng và định nghĩa phân bổ hiển thị phù hợp để đánh giá mục tiêu này |
-| Dữ liệu là review | Cần log hiển thị, click, mua và thực nghiệm phù hợp để kết luận về hiệu quả kinh doanh |
+| Các h đã thử và cấu hình chọn | `reports/temporal_cf/validation_grid.csv`, `selected_config.json` |
+| So sánh ba mô hình trên test | `reports/temporal_cf/test_comparison.csv` |
+| Chất lượng theo số sản phẩm tích cực trong lịch sử | `reports/temporal_cf/personalization_groups.csv` |
+| Số lượng và tỷ lệ danh sách đổi thứ hạng | `reports/temporal_cf/rank_change_by_group.csv` |
+| Temporal trừ ItemCF và khoảng tin cậy | `reports/temporal_cf/test_ndcg10_paired_bootstrap.csv` |
+| Biểu đồ và diễn giải tự điền | `reports/temporal_cf/temporal_comparison.png`, `temporal_summary.md` |
+| Mốc thời gian, fingerprint và quy tắc đánh giá | `reports/temporal_cf/test_protocol.json` |
+| Quy mô và kiểm tra gói bàn giao | `reports/temporal_cf/handoff_summary.json` |
 
-Khoảng tin cậy bootstrap hiện tại chỉ phản ánh lấy mẫu người dùng của test đang có; chưa bao gồm bất định khi huấn luyện lại hoặc thay đổi thời gian.
+Chỉ kết luận temporal cải thiện khi số liệu hỗ trợ. Nếu chênh lệch nhỏ hoặc khoảng tin cậy chứa 0, ghi rõ chưa có bằng chứng rõ. Không đổi tham số theo kết quả test để tạo mức cải thiện.
 
-### 3.5. Tổng kết
+## 6. Bốn notebook và cách chạy bản cập nhật
 
-Giai đoạn hiện tại đã xây dựng được bộ baseline khuyến nghị sản phẩm có thể chạy lại, gồm Most Popular và ItemCF với fallback, kèm quy trình đánh giá theo thời gian và các đầu ra để kiểm tra. Kết quả cho thấy ItemCF mở rộng đáng kể danh mục sản phẩm xuất hiện trong các danh sách, nhưng chưa có bằng chứng rõ về cải thiện NDCG@10 so với Most Popular. Đóng góp chính của phần việc là chuẩn hóa dữ liệu và quy trình thực nghiệm, tạo mốc so sánh có số liệu, đồng thời xác định rõ các trường hợp người dùng ít lịch sử và sản phẩm mới cần nghiên cứu tiếp. **Phần dữ liệu và baseline CF đã hoàn thành; câu hỏi giảm thiên vị sản phẩm phổ biến ở mục 1.2 vẫn cần thực nghiệm.** Các bước tích hợp KG/TKG và LLM cần được đánh giá dựa trên mốc này trước khi đưa ra kết luận về lợi ích cho toàn hệ thống.
+| Notebook | Vai trò | Đầu ra chính |
+| --- | --- | --- |
+| [01_data_preparation.ipynb](01_data_preparation.ipynb) | Kiểm tra dữ liệu, chuẩn hóa và chia tập thời gian | `data/processed/` |
+| [02_item_based_cf.ipynb](02_item_based_cf.ipynb) | Most Popular và ItemCF ban đầu trên validation | `reports/item_cf/`, `models/item_cf/` |
+| [03_tuning_and_test.ipynb](03_tuning_and_test.ipynb) | Giữ baseline; thêm time-decay, phân tích dữ liệu thưa và bàn giao Member 2 | `reports/final_cf/`, `reports/temporal_cf/`, mô hình và gói handoff |
+| [04_results_and_demo.ipynb](04_results_and_demo.ipynb) | Giữ biểu đồ và demo baseline, ghép tên sản phẩm | `reports/cf_presentation/` |
 
-## Phụ lục A — Cách chạy lại
+### 6.1. Thay notebook và chạy trên VS Code
 
-Môi trường sử dụng: Python 3.12, VS Code với Python/Jupyter, CPU và RAM 16 GB. Phép tính dùng ma trận thưa và không cần API key.
+1. Thay `03_tuning_and_test.ipynb` và `README.md` cũ bằng hai tệp cập nhật, giữ đúng tên và đặt ở thư mục gốc dự án, cùng cấp các notebook còn lại.
+2. Kiểm tra đã có `data/processed/train.parquet`, `validation.parquet`, `test.parquet`, `split_config.json` từ notebook 01. Nếu đủ, **không cần chạy lại notebook 01 và 02** chỉ để dùng bản cập nhật.
+3. Mở notebook 03, chọn kernel `.venv`, lưu tệp rồi chọn **Restart Kernel → Run All**. Kiểm tra `Path.cwd()` in đúng thư mục gốc dự án.
+4. Giữ mặc định `HALF_LIFE_GRID = (90, 180, 365)` và `CANDIDATE_K = 100`. Notebook tự sao lưu đầu ra baseline cũ trước khi tái tạo baseline.
+5. Chờ chạy hết bước bàn giao, sau đó xem `reports/temporal_cf/temporal_summary.md` và `handoff_summary.json`.
 
-Mở PowerShell tại thư mục dự án, tạo môi trường nếu chưa có:
+Notebook 03 mới chạy độc lập với biến của notebook 02. Không cần đọc lại Excel cho bước này. Không cần chạy notebook 04 để có biểu đồ temporal vì notebook 03 đã tự tạo hình riêng. Notebook 04 tiếp tục dùng mô hình và kết quả baseline.
+
+Bảng ứng viên có thể có hàng triệu dòng; notebook ghi CSV nén theo luồng và in tiến độ. Thời gian chạy phụ thuộc CPU, số ứng viên và ổ đĩa; chưa có thời lượng đo trên máy của người thực hiện cho phần mở rộng này.
+
+### 6.2. Môi trường
+
+Môi trường dự án: Windows, VS Code, Python 3.12, Python/Jupyter, CPU và RAM 16 GB. Không cần API key hoặc GPU cho thí nghiệm này. Dùng `requirements.txt` hiện có; phần mới dùng các thư viện thông dụng đã phục vụ baseline và biểu đồ: numpy, pandas, scipy, scikit-learn, matplotlib; đọc Parquet cần pyarrow.
+
+Nếu thiết lập từ đầu, chạy PowerShell tại thư mục dự án:
 
 ```powershell
 py -3.12 -m venv .venv
@@ -264,46 +236,108 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Trong VS Code, mở notebook, chọn **Select Kernel → Python Environments → `.venv`**, rồi chạy theo thứ tự:
+Nếu còn thiếu thư viện khi chọn đúng kernel:
 
-| Thứ tự | Notebook | Đầu ra chính |
-| --- | --- | --- |
-| 1 | [01_data_preparation.ipynb](01_data_preparation.ipynb) | Dữ liệu xử lý, train/validation/test và `split_config.json` |
-| 2 | [02_item_based_cf.ipynb](02_item_based_cf.ipynb) | Most Popular và ItemCF ban đầu trên validation |
-| 3 | [03_tuning_and_test.ipynb](03_tuning_and_test.ipynb) | Chọn N, huấn luyện lại, đánh giá test, mô hình cuối |
-| 4 | [04_results_and_demo.ipynb](04_results_and_demo.ipynb) | Biểu đồ, ví dụ có tên sản phẩm và nội dung trình bày |
+```powershell
+.\.venv\Scripts\python.exe -m pip install numpy pandas scipy scikit-learn matplotlib pyarrow ipykernel
+```
 
-Đặt các notebook ở thư mục gốc dự án và kiểm tra `Path.cwd()` được in ở ô đầu trỏ tới thư mục này. Chọn **Run All** cho từng notebook. Notebook 03 và 04 có thể chạy sau khi khởi động lại kernel nếu các tệp đầu vào từ bước trước đã tồn tại.
-
-Để ghi lại chính xác các phiên bản thư viện trên máy đã chạy thành công:
+Ghi lại phiên bản từ môi trường đã chạy thành công:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip freeze > requirements-lock.txt
 ```
 
-## Phụ lục B — Tổ chức tệp và đưa lên GitHub
+## 7. Gói bàn giao cho Member 2
 
-| Đường dẫn | Nội dung | Đưa vào Git |
-| --- | --- | --- |
-| `01_*.ipynb` đến `04_*.ipynb` | Mã nguồn notebook | Có |
-| `README.md`, `requirements.txt`, `.gitignore` | Hướng dẫn và cấu hình | Có |
-| `reports/final_cf/` | Bảng chỉ số, lựa chọn tham số, chẩn đoán và báo cáo | Có, trừ bảng từng người dùng |
-| `reports/cf_presentation/` | Hình PNG, bảng kết quả, ví dụ và nội dung trình bày | Có |
-| `data/` và file Excel | Dữ liệu nguồn và dữ liệu xử lý | Chia sẻ riêng |
-| `models/` | Ma trận, ánh xạ, lịch sử và mô hình đã lưu | Tạo lại bằng notebook 03 hoặc chia sẻ riêng |
-| `.venv/` | Môi trường cục bộ | Cài lại từ requirements |
+Khi chạy xong mục 13 của notebook 03, có:
 
-`.gitignore` đi kèm loại dữ liệu, mô hình, môi trường và các bảng chỉ số theo từng người dùng. Các tệp CSV tổng hợp, ảnh và Markdown trong `reports/` vẫn có thể commit.
+```text
+models/member2_handoff/
+    README_MEMBER2.md
+    baseline_models.py
+    baseline_model/
+    temporal_model/
+    candidates_top100.csv.gz
+    static_selected_config.json
+    temporal_selected_config.json
+    test_comparison.csv
+    personalization_groups.csv
+    rank_change_by_group.csv
+    test_ndcg10_paired_bootstrap.csv
+    manifest.json
+models/member2_handoff.zip
+```
 
+Gói gồm mô hình ItemCF baseline và biến thể temporal được chọn, module nạp/dự đoán độc lập với trạng thái notebook, các cấu hình và báo cáo tổng hợp. Notebook kiểm tra nạp lại hai mô hình và đối chiếu dự đoán cùng điểm số trước khi hoàn tất gói.
 
-Xem thêm [GITHUB_UPLOAD.md](GITHUB_UPLOAD.md) để chọn quy trình đẩy lên repository mới hoặc nhánh riêng trong repository nhóm.
+### 7.1. Phạm vi ứng viên và schema
+
+Xuất tối đa **100 ứng viên cho mỗi biến thể trên mỗi người dùng test đủ điều kiện đánh giá**. Hai biến thể có danh sách riêng; định dạng CSV dùng một dòng cho một ứng viên của một biến thể. Phạm vi này không gồm mọi tài khoản hoặc mọi người viết review trong test. Không xuất nhãn relevance test vào bảng ứng viên.
+
+| Trường | Ý nghĩa |
+| --- | --- |
+| `model` | `itemcf_static` hoặc `itemcf_time_decay` |
+| `user_id`, `parent_asin` | ID dạng chuỗi thống nhất với dữ liệu dự án |
+| `rank` | Thứ hạng cuối bắt đầu từ 1; dùng làm thứ tự chuẩn |
+| `score` | Điểm vô hướng giữ nguyên chính sách CF trước, fallback sau |
+| `cf_score` | Tổng cosine hoặc tổng cosine có trọng số thời gian; fallback bằng 0 |
+| `positive_user_count` | Số người dùng tích cực khác nhau của sản phẩm trong lịch sử |
+| `ranking_tier` | 1 cho CF, 0 cho fallback |
+| `score_source` | `CF` hoặc `Most Popular fallback` |
+| `history_positive_count` | Số sản phẩm tích cực khác nhau của người dùng trong lịch sử |
+| `prediction_timestamp_ms` | Mốc dự đoán, đơn vị mili giây |
+
+Khóa duy nhất của vị trí là (`model`, `user_id`, `rank`); sản phẩm không lặp trong từng danh sách. `score` dùng `1 + cf_score/(1+cf_score)` cho CF và `positive_user_count/(1+max_positive_user_count)` cho fallback. Phép biến đổi này giữ CF ở trước fallback, không thêm thuật toán điều chỉnh công bằng. Nếu bằng điểm, theo `parent_asin` tăng dần. Điểm chưa được hiệu chỉnh để so sánh giữa người dùng hoặc diễn giải thành xác suất mua.
+
+Member 2 có thể rerank các ứng viên đã xuất. Các sản phẩm ngoài Top-100 hoặc ngoài catalog lịch sử cần nguồn ứng viên bổ sung nếu muốn xét đến; khi đó phải ghi rõ thay đổi quy trình so sánh.
+
+### 7.2. Ví dụ nạp mô hình
+
+Giải nén gói, đứng tại thư mục có `baseline_models.py`:
+
+```python
+from pathlib import Path
+import pandas as pd
+from baseline_models import ItemCFModel, TimeDecayItemCF, scored_recommendations
+
+root = Path('.')
+baseline = ItemCFModel.load(root / 'baseline_model')
+temporal = TimeDecayItemCF.load(root / 'temporal_model', baseline)
+
+user_id = 'THAY_BANG_USER_ID_CAN_GOI_Y'
+top_k = pd.DataFrame(scored_recommendations(temporal, user_id, k=100))
+```
+
+Giữ hai thư mục mô hình cùng nhau: temporal dùng cosine và các ánh xạ của baseline. Đọc CSV ứng viên theo `chunksize` nếu cần để tránh nạp toàn bộ tệp vào RAM. Chi tiết nằm trong `README_MEMBER2.md`; `manifest.json` lưu số dòng, cấu hình, phiên bản thư viện và SHA256 tệp.
+
+## 8. Đưa lên GitHub để leader xem
+
+| Nội dung | Cách bàn giao |
+| --- | --- |
+| Bốn notebook, README, requirements, `.gitignore` | Commit vào repository |
+| `reports/final_cf/`, `reports/cf_presentation/` | Giữ các báo cáo tổng hợp và hình baseline |
+| `reports/temporal_cf/` | Commit CSV tổng hợp, JSON cấu hình, Markdown và PNG sau khi chạy thành công |
+| `reports/temporal_cf/test_per_user.csv.gz` | Chia sẻ riêng; `.gitignore` hiện có đã loại mẫu tệp này |
+| Excel, Parquet, `data/` | Chia sẻ riêng |
+| `models/`, gói handoff, bản sao lưu baseline | Chia sẻ riêng; nằm dưới thư mục đã được `.gitignore` loại |
+| `.venv/` | Tạo lại bằng requirements |
+
+Sau khi chạy xong, leader xem trước [báo cáo temporal](reports/temporal_cf/temporal_summary.md), [so sánh test](reports/temporal_cf/test_comparison.csv), [phân tích nhóm](reports/temporal_cf/personalization_groups.csv) và [thay đổi thứ hạng](reports/temporal_cf/rank_change_by_group.csv). Các liên kết này có nội dung khi kết quả đã được tạo và commit.
+
+## 9. Tổng kết phần việc
+
+Baseline đã tạo được quy trình kiểm tra dữ liệu, chia tập, gợi ý Top-K, đánh giá và lưu mô hình có thể chạy lại. Kết quả trước cho thấy CF mở rộng danh mục được gợi ý nhưng còn phụ thuộc nhiều vào fallback và chưa có bằng chứng rõ về cải thiện NDCG@10.
+
+Notebook 03 mới cụ thể hóa yêu cầu Temporal Recommendation Baseline bằng một phép thử trọng số thời gian, giữ cùng cosine và quy trình so sánh. Nó cũng cung cấp phân tích theo mức độ lịch sử để tránh quy kết tác dụng temporal cho những người chỉ có một tương tác tích cực, và tạo đầu vào có thể nạp lại cho Member 2.
+
+**Cần chạy notebook 03 trên dữ liệu đầy đủ để hoàn tất kết quả temporal và gói bàn giao.** Kết luận cuối phải theo số liệu từ lần chạy đó, bao gồm trường hợp temporal không cải thiện baseline.
 
 ## Tài liệu tham khảo
 
-- Abdollahpouri, H., Burke, R., Mobasher, B. (2019). [Managing Popularity Bias in Recommender Systems with Personalized Re-ranking](https://arxiv.org/abs/1901.07555).
-- Abdollahpouri, H., Mansoury, M., Burke, R., Mobasher, B., Malthouse, E. (2021). [User-centered Evaluation of Popularity Bias in Recommender Systems](https://arxiv.org/abs/2103.06364).
-- [Recommenders — repository tham khảo](https://github.com/recommenders-team/recommenders)
-- [scikit-learn — Cross-validation](https://scikit-learn.org/stable/modules/cross_validation.html)
-- [SciPy — lưu ma trận thưa](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.save_npz.html)
+- [Recommenders — repository tham khảo](https://github.com/recommenders-team/recommenders).
+- Koren, Y. (2009). [Collaborative Filtering with Temporal Dynamics](https://doi.org/10.1145/1557019.1557072) — tài liệu nền về mô hình hóa thời gian; phép thử decay đơn giản trong notebook không phải bản tái hiện đầy đủ phương pháp của bài báo.
+- [scikit-learn — Cross-validation](https://scikit-learn.org/stable/modules/cross_validation.html).
+- [SciPy — lưu ma trận thưa](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.save_npz.html).
 
-Repository Recommenders ở trên được dùng làm tài liệu tham khảo; mã và kết quả của nhóm được bàn giao trong repository do nhóm quản lý.
+Repository Recommenders được dùng để tham khảo. Mã nguồn triển khai và kết quả dự án được theo dõi tại [recommender-system-huong1](https://github.com/CuongQuoc-speed/recommender-system-huong1).

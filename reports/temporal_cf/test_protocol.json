@@ -1,0 +1,12 @@
+{
+  "history_end_timestamp_ms": 1643201980125,
+  "static_selection_sha256": "aaba022ba5aed391ca700f78e9812f09ba355e4b659c8251f2af8d736736cb48",
+  "temporal_selection_sha256": "8ca9cd7d75f5f14cef37290e11852d482f486fe76f42fa8cc9c70d527d826cc8",
+  "test_fingerprint": "cdf737d38647a5d8c00f96f17a6d012b3443c6448e731d436a42f939cc99cc24",
+  "test_users": 43656,
+  "temporal_evaluation_seconds": 1.0018301000000065,
+  "history_updated_during_test": false,
+  "same_similarity_and_catalog_as_static": true,
+  "same_ground_truth_as_static": true,
+  "test_used_for_selection": false
+}

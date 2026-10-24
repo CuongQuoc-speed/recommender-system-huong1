@@ -1,0 +1,12 @@
+{
+  "eligible_test_users": 43656,
+  "candidate_k": 100,
+  "candidate_rows": 8731200,
+  "rows_by_variant": {
+    "itemcf_static": 4365600,
+    "itemcf_time_decay": 4365600
+  },
+  "handoff_directory": "models\\member2_handoff",
+  "zip_created": true,
+  "standalone_load_check": "passed"
+}

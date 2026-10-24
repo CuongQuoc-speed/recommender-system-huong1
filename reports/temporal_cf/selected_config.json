@@ -1,0 +1,44 @@
+{
+  "created_at_utc": "2026-10-24T07:34:34.019528+00:00",
+  "algorithm": "itemcf_history_time_decay",
+  "half_life_grid_days": [
+    90,
+    180,
+    365
+  ],
+  "selected_half_life_days": 180,
+  "selected_n_neighbors": 10,
+  "n_selection": "unchanged static baseline validation rule",
+  "half_life_selection": "validation NDCG@10 all eligible users; Recall@10; smaller half-life",
+  "selection_data": "validation only",
+  "test_used_for_selection": false,
+  "finite_half_life_required_for_experiment": true,
+  "selected_validation_metrics": {
+    "model": "Time-decay ItemCF + Popular fallback",
+    "k": 10,
+    "group": "Toàn bộ",
+    "users": 85951,
+    "Precision@K": 0.0014380286442275253,
+    "Recall@K": 0.014132007599506523,
+    "NDCG@K": 0.006659155448904748,
+    "CatalogCoverage@K": 0.0894913872184283,
+    "CF_slot_fraction": 0.02208816651347861,
+    "popular_only_list_fraction": 0.9651894684180522,
+    "n_neighbors": 10,
+    "half_life_days": 180,
+    "is_temporal_trial": true
+  },
+  "static_validation_ndcg10": 0.006657956421292206,
+  "validation_reference_timestamp_ms": 1607221537757,
+  "train_fingerprint": "c15598569f59eeb132b8cbfe9fab4bd568594b85300c35000189a9fe7b79e583",
+  "static_selection_sha256": "aaba022ba5aed391ca700f78e9812f09ba355e4b659c8251f2af8d736736cb48",
+  "split_config": {
+    "split_method": "global_chronological",
+    "train_end_timestamp_ms": 1607221537757,
+    "validation_end_timestamp_ms": 1643201980125,
+    "positive_rating_threshold": 4.0,
+    "item_column": "parent_asin"
+  },
+  "weights": "2 ** (-(reference_timestamp_ms - latest_positive_timestamp_ms) / 86400000 / half_life_days)",
+  "test_protocol_note": "Extension of an already reported static baseline; no hyperparameter chosen on test."
+}

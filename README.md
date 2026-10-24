@@ -1,7 +1,7 @@
 # Hướng 1 — Temporal Recommendation Baseline
 
 **Người thực hiện: Cường Quốc**  
-**Cập nhật: 24/10/2026**  
+**Cập nhật kết quả sau khi chạy Notebook 03: 24/10/2026**  
 Đề tài chung: Hệ thống khuyến nghị thương mại điện tử dựa trên đồ thị tri thức thời gian và mô hình ngôn ngữ.
 
 Phần việc này xây dựng mốc so sánh bằng Most Popular và Item-based Collaborative Filtering (ItemCF), sau đó bổ sung một thí nghiệm để thời gian tác động trực tiếp đến điểm gợi ý. Đầu ra gồm mô hình, kết quả đánh giá, phân tích giới hạn cá nhân hóa và danh sách ứng viên có điểm xếp hạng cho Member 2.
@@ -9,12 +9,12 @@ Phần việc này xây dựng mốc so sánh bằng Most Popular và Item-based
 | Hạng mục | Trạng thái của phiên bản này |
 | --- | --- |
 | Chuẩn bị dữ liệu, Most Popular, ItemCF, đánh giá và biểu đồ baseline | Đã có kết quả từ lần chạy trước; giữ lại làm mốc so sánh |
-| Time-decay ItemCF trong notebook 03 | Đã bổ sung mã chọn tham số, huấn luyện, đánh giá và báo cáo |
-| Phân tích nhóm có 0, 1 và từ 2 sản phẩm tích cực trong lịch sử | Đã bổ sung mã; tự xuất số liệu sau khi chạy |
-| Bàn giao mô hình, Top-100 ứng viên và điểm cho Member 2 | Đã bổ sung bước xuất module Python, mô hình, CSV nén, cấu hình và ZIP |
-| Kết quả temporal trên dữ liệu All Beauty đầy đủ | **Chờ Run All notebook 03 trên dữ liệu thật; chưa công bố số liệu mới** |
+| Time-decay ItemCF trong notebook 03 | Đã chạy trên dữ liệu All Beauty; chọn N = 10, h = 180 ngày bằng validation |
+| Phân tích nhóm có 0, 1 và từ 2 sản phẩm tích cực trong lịch sử | Đã có số liệu, kiểm tra thay đổi thứ hạng và khoảng tin cậy |
+| Chuẩn bị gói bàn giao Member 2 | Đã tạo module Python, hai mô hình, 8.731.200 dòng ứng viên/điểm và ZIP; kiểm tra nạp lại thành công |
+| Kết quả temporal trên dữ liệu All Beauty đầy đủ | **Đã hoàn tất lần chạy và xuất báo cáo vào `reports/temporal_cf/`** |
 
-Mã phần mở rộng được kiểm tra bằng dữ liệu mô phỏng. Việc kiểm tra này xác nhận quy trình và các trường hợp quan trọng; không thay thế đánh giá trên dữ liệu All Beauty của dự án.
+Kết quả trong README này được đối chiếu với Notebook 03 đã chạy đủ 19 ô mã, các CSV và JSON của lần chạy All Beauty ngày 24/10/2026. Phép kiểm tra bằng dữ liệu mô phỏng trước đó phục vụ kiểm tra logic; các số liệu dưới đây lấy từ lần chạy dữ liệu thật của dự án. Gói mô hình và CSV ứng viên đầy đủ được tạo trên máy Cường Quốc để chia sẻ riêng cho Member 2.
 
 ## 1. Bài toán và phạm vi được phân công
 
@@ -40,8 +40,8 @@ Các chỉ số offline từ review chưa chứng minh mức tăng doanh thu, l�
 | 3 | Xây Most Popular và ItemCF bằng ma trận thưa | Baseline chạy CPU, hướng tới máy RAM 16 GB |
 | 4 | Thử số lân cận N trên validation, chốt cấu hình rồi đánh giá test | Bảng chỉ số, bootstrap, mô hình cuối và ví dụ gợi ý |
 | 5 | Tạo biểu đồ và minh họa có tên sản phẩm | Các tệp trình bày baseline trong notebook 04 |
-| 6 | Bổ sung trọng số thời gian vào lịch sử ItemCF trong notebook 03 | Mã thí nghiệm temporal, đánh giá theo nhóm lịch sử và báo cáo riêng |
-| 7 | Chuẩn hóa bàn giao cho Member 2 | Mã nạp mô hình, hai biến thể, ứng viên/điểm/thứ hạng và manifest; được tạo khi notebook chạy xong |
+| 6 | Chạy Time-decay ItemCF trong notebook 03 | Chọn h = 180 ngày; đánh giá test, phân tích nhóm lịch sử, tạo biểu đồ và báo cáo temporal |
+| 7 | Tạo gói dùng cho Member 2 | Đã xuất mã nạp mô hình, hai biến thể, 8.731.200 dòng ứng viên/điểm/thứ hạng, cấu hình và manifest; kiểm tra nạp lại thành công |
 
 ### 2.1. Dữ liệu đã kiểm tra
 
@@ -129,7 +129,9 @@ Thử **h = 90, 180, 365 ngày**. Đối chứng h = ∞ dùng trọng số 1 đ
 4. Học baseline cuối bằng **train + validation**; tạo ma trận trọng số temporal trên cùng lịch sử, với mốc cuối lịch sử đó.
 5. So sánh Most Popular, ItemCF và Time-decay ItemCF trên cùng test; không chọn lại N hoặc h theo test.
 
-Giữ h hữu hạn được chọn để thực hiện thí nghiệm kể cả khi không vượt baseline. Kết quả không cải thiện vẫn là kết quả cần báo cáo. Baseline test đã được xem trong giai đoạn trước; đây là thí nghiệm mở rộng với tham số chọn trên validation. Một giai đoạn holdout mới sẽ giúp xác nhận độc lập hơn.
+Lần chạy này chọn **N = 10 và h = 180 ngày** từ validation. NDCG@10 validation của ItemCF là **0,00665796**, của temporal được chọn là **0,00665916**. Giữ h đã chọn khi đánh giá test.
+
+Giữ h hữu hạn để thực hiện thí nghiệm kể cả khi không vượt baseline; kết quả không cải thiện vẫn cần báo cáo. Baseline test đã được xem trong giai đoạn trước; đây là thí nghiệm mở rộng với tham số chọn trên validation. Một giai đoạn holdout mới sẽ giúp xác nhận độc lập hơn.
 
 ### 4.4. Độ thưa và giới hạn cá nhân hóa
 
@@ -186,22 +188,69 @@ Chênh lệch NDCG@10 của ItemCF trừ Most Popular trên toàn bộ là **0,0
 
 ItemCF mở rộng số sản phẩm xuất hiện ở Top-10 từ 11 lên 6.046 sản phẩm. Tuy nhiên, khoảng **95,94%** danh sách hoàn toàn lấy từ Most Popular; CF trực tiếp chỉ chiếm khoảng **2,70%** vị trí trên toàn bộ. Độ phủ cao hơn chưa chứng minh giảm popularity bias, công bằng theo cửa hàng hoặc tăng doanh thu.
 
-### 5.2. Đọc kết quả temporal sau khi chạy
+### 5.2. Kết quả temporal đã chạy trên All Beauty
 
-Phiên bản này chưa điền số liệu temporal trên dữ liệu thật. Sau khi notebook 03 chạy thành công, dùng các tệp sau để cập nhật kết luận:
+Cấu hình cuối là **N = 10, h = 180 ngày**, được chọn trên validation rồi giữ nguyên khi đánh giá test. Ba mô hình được so sánh trên cùng **43.656 người dùng đủ điều kiện**, cùng lịch sử train + validation và cùng ground truth.
 
-| Nội dung cần đối chiếu | Tệp |
+| Mô hình | K | Precision (%) | Recall (%) | NDCG | Catalog coverage (%) |
+| --- | --- | --- | --- | --- | --- |
+| Most Popular | 10 | 0.1636 | 1.6218 | 0.00732834 | 0.0107 |
+| ItemCF + fallback | 10 | 0.1645 | 1.6298 | 0.00740466 | 5.8720 |
+| Time-decay ItemCF + fallback | 10 | 0.1645 | 1.6298 | 0.00740848 | 5.8992 |
+| Most Popular | 20 | 0.1401 | 2.7770 | 0.01028960 | 0.0214 |
+| ItemCF + fallback | 20 | 0.1405 | 2.7850 | 0.01036184 | 6.3285 |
+| Time-decay ItemCF + fallback | 20 | 0.1406 | 2.7862 | 0.01036878 | 6.3537 |
+
+Nguồn: [test_comparison.csv](reports/temporal_cf/test_comparison.csv). Các cột Precision, Recall và coverage có ký hiệu % đã nhân 100; NDCG giữ thang 0–1.
+
+Ở Top-10, temporal có NDCG cao hơn ItemCF một lượng nhỏ, trong khi Precision và Recall không đổi trong lần chạy này. Kết quả đó phù hợp với việc thời gian tác động vào vị trí của sản phẩm liên quan trong danh sách; không đồng nghĩa thu hồi thêm sản phẩm liên quan ở K = 10.
+
+### 5.3. Tác động của thời gian và giới hạn cá nhân hóa
+
+Các nhóm được xác định bằng số **sản phẩm tích cực khác nhau trong train + validation**:
+
+| Lịch sử tích cực | Người dùng | NDCG@10 ItemCF | NDCG@10 temporal | Top-10 thay đổi | Tỷ lệ thay đổi (%) |
+| --- | --- | --- | --- | --- | --- |
+| 0 sản phẩm tích cực | 41,123 | 0.00758814 | 0.00758814 | 0 | 0.00 |
+| 1 sản phẩm tích cực | 1,850 | 0.00483546 | 0.00483546 | 0 | 0.00 |
+| Từ 2 sản phẩm tích cực | 683 | 0.00331668 | 0.00356070 | 379 | 55.49 |
+
+Nguồn: [personalization_groups.csv](reports/temporal_cf/personalization_groups.csv) và [rank_change_by_group.csv](reports/temporal_cf/rank_change_by_group.csv). Số người dùng trong bảng dùng dấu phẩy để phân cách hàng nghìn.
+
+- Trong 683 người dùng có từ 2 sản phẩm tích cực, **379 người đổi Top-10, tương đương 55,49%**; Top-20 thay đổi ở **400 người, tương đương 58,57%**. Điều này xác nhận yếu tố thời gian đã tác động trực tiếp đến kết quả thuật toán.
+- Nhóm không có lịch sử tích cực và nhóm chỉ có một sản phẩm tích cực đều không đổi thứ hạng, đúng với cơ chế fallback và phép nhân chung một hệ số dương.
+- Nhóm từ 2 sản phẩm tích cực chỉ chiếm khoảng **1,56%** toàn bộ người dùng test đủ điều kiện. Vì vậy tỷ lệ danh sách đổi Top-10 trên toàn bộ chỉ khoảng **0,87%**, dù trong nhóm này đạt 55,49%.
+- Trên toàn bộ, khoảng **95,94%** danh sách Top-10 vẫn hoàn toàn dùng Most Popular. Temporal weighting chưa khắc phục thiếu lịch sử hoặc thiếu sản phẩm trong catalog ứng viên.
+
+![So sánh temporal và khả năng cá nhân hóa](reports/temporal_cf/temporal_comparison.png)
+
+### 5.4. Khoảng tin cậy và kết luận thực nghiệm
+
+Paired bootstrap theo cùng người dùng, 1.000 lần, seed 42:
+
+| Nhóm | Chênh lệch NDCG@10 temporal − ItemCF | CI95% | Chứa 0 |
+| --- | --- | --- | --- |
+| Toàn bộ | 0.00000382 | [0.00000000; 0.00001527] | Có |
+| Từ 2 sản phẩm tích cực | 0.00024402 | [0.00000000; 0.00073206] | Có |
+
+Nguồn: [test_ndcg10_paired_bootstrap.csv](reports/temporal_cf/test_ndcg10_paired_bootstrap.csv).
+
+**Thời gian đã làm thay đổi thứ hạng ở nhóm có đủ lịch sử, nhưng chưa có bằng chứng rõ về cải thiện NDCG@10**, vì khoảng tin cậy chứa 0. Không diễn giải mức tăng điểm nhỏ thành cải thiện đáng tin cậy, tăng doanh thu hoặc giải quyết popularity bias.
+
+### 5.5. Tệp đối chiếu cho leader
+
+| Nội dung | Tệp |
 | --- | --- |
-| Các h đã thử và cấu hình chọn | `reports/temporal_cf/validation_grid.csv`, `selected_config.json` |
-| So sánh ba mô hình trên test | `reports/temporal_cf/test_comparison.csv` |
-| Chất lượng theo số sản phẩm tích cực trong lịch sử | `reports/temporal_cf/personalization_groups.csv` |
-| Số lượng và tỷ lệ danh sách đổi thứ hạng | `reports/temporal_cf/rank_change_by_group.csv` |
-| Temporal trừ ItemCF và khoảng tin cậy | `reports/temporal_cf/test_ndcg10_paired_bootstrap.csv` |
-| Biểu đồ và diễn giải tự điền | `reports/temporal_cf/temporal_comparison.png`, `temporal_summary.md` |
-| Mốc thời gian, fingerprint và quy tắc đánh giá | `reports/temporal_cf/test_protocol.json` |
-| Quy mô và kiểm tra gói bàn giao | `reports/temporal_cf/handoff_summary.json` |
+| Các h đã thử và cấu hình chọn | [validation_grid.csv](reports/temporal_cf/validation_grid.csv), [selected_config.json](reports/temporal_cf/selected_config.json) |
+| So sánh ba mô hình trên test | [test_comparison.csv](reports/temporal_cf/test_comparison.csv) |
+| Chất lượng theo lịch sử tích cực | [personalization_groups.csv](reports/temporal_cf/personalization_groups.csv) |
+| Tỷ lệ danh sách đổi thứ hạng | [rank_change_by_group.csv](reports/temporal_cf/rank_change_by_group.csv) |
+| Temporal trừ ItemCF và khoảng tin cậy | [test_ndcg10_paired_bootstrap.csv](reports/temporal_cf/test_ndcg10_paired_bootstrap.csv) |
+| Biểu đồ và diễn giải tự xuất | [temporal_comparison.png](reports/temporal_cf/temporal_comparison.png), [temporal_summary.md](reports/temporal_cf/temporal_summary.md) |
+| Mốc thời gian và fingerprint | [test_protocol.json](reports/temporal_cf/test_protocol.json) |
+| Quy mô và kiểm tra gói dùng cho Member 2 | [handoff_summary.json](reports/temporal_cf/handoff_summary.json) |
 
-Chỉ kết luận temporal cải thiện khi số liệu hỗ trợ. Nếu chênh lệch nhỏ hoặc khoảng tin cậy chứa 0, ghi rõ chưa có bằng chứng rõ. Không đổi tham số theo kết quả test để tạo mức cải thiện.
+Các báo cáo trên đã được tạo từ lần chạy thật và đưa lên repository. README là bản tổng hợp viết riêng, không tự thay đổi khi nhấn Run All; khi chạy thí nghiệm khác cần đối chiếu các CSV mới rồi cập nhật nội dung tương ứng.
 
 ## 6. Bốn notebook và cách chạy bản cập nhật
 
@@ -212,9 +261,11 @@ Chỉ kết luận temporal cải thiện khi số liệu hỗ trợ. Nếu chê
 | [03_tuning_and_test.ipynb](03_tuning_and_test.ipynb) | Giữ baseline; thêm time-decay, phân tích dữ liệu thưa và bàn giao Member 2 | `reports/final_cf/`, `reports/temporal_cf/`, mô hình và gói handoff |
 | [04_results_and_demo.ipynb](04_results_and_demo.ipynb) | Giữ biểu đồ và demo baseline, ghép tên sản phẩm | `reports/cf_presentation/` |
 
-### 6.1. Thay notebook và chạy trên VS Code
+### 6.1. Chạy lại trên VS Code
 
-1. Thay `03_tuning_and_test.ipynb` và `README.md` cũ bằng hai tệp cập nhật, giữ đúng tên và đặt ở thư mục gốc dự án, cùng cấp các notebook còn lại.
+Lần chạy ngày 24/10/2026 đã hoàn tất. Các bước dưới đây dùng để tái lập kết quả; không cần chạy lại chỉ để cập nhật README.
+
+1. Mở thư mục dự án chứa bốn notebook; giữ tên `03_tuning_and_test.ipynb` tại thư mục gốc.
 2. Kiểm tra đã có `data/processed/train.parquet`, `validation.parquet`, `test.parquet`, `split_config.json` từ notebook 01. Nếu đủ, **không cần chạy lại notebook 01 và 02** chỉ để dùng bản cập nhật.
 3. Mở notebook 03, chọn kernel `.venv`, lưu tệp rồi chọn **Restart Kernel → Run All**. Kiểm tra `Path.cwd()` in đúng thư mục gốc dự án.
 4. Giữ mặc định `HALF_LIFE_GRID = (90, 180, 365)` và `CANDIDATE_K = 100`. Notebook tự sao lưu đầu ra baseline cũ trước khi tái tạo baseline.
@@ -222,11 +273,11 @@ Chỉ kết luận temporal cải thiện khi số liệu hỗ trợ. Nếu chê
 
 Notebook 03 mới chạy độc lập với biến của notebook 02. Không cần đọc lại Excel cho bước này. Không cần chạy notebook 04 để có biểu đồ temporal vì notebook 03 đã tự tạo hình riêng. Notebook 04 tiếp tục dùng mô hình và kết quả baseline.
 
-Bảng ứng viên có thể có hàng triệu dòng; notebook ghi CSV nén theo luồng và in tiến độ. Thời gian chạy phụ thuộc CPU, số ứng viên và ổ đĩa; chưa có thời lượng đo trên máy của người thực hiện cho phần mở rộng này.
+Lần chạy này đã xuất **8.731.200 dòng ứng viên**. Notebook ghi CSV nén theo luồng và in tiến độ, tránh nạp toàn bộ bảng vào RAM. Thời gian chạy lại phụ thuộc CPU, số ứng viên và ổ đĩa.
 
 ### 6.2. Môi trường
 
-Môi trường dự án: Windows, VS Code, Python 3.12, Python/Jupyter, CPU và RAM 16 GB. Không cần API key hoặc GPU cho thí nghiệm này. Dùng `requirements.txt` hiện có; phần mới dùng các thư viện thông dụng đã phục vụ baseline và biểu đồ: numpy, pandas, scipy, scikit-learn, matplotlib; đọc Parquet cần pyarrow.
+Môi trường dự án: Windows, VS Code, Python/Jupyter, CPU và RAM 16 GB. Phiên bản được ghi nhận trong lần chạy: Python 3.12.10, pandas 3.0.6, NumPy 2.5.4, SciPy 1.18.1 và scikit-learn 1.9.1. Các phiên bản này mô tả môi trường đã chạy, không phải yêu cầu bắt buộc nâng cấp mọi máy lên cùng phiên bản. Không cần API key hoặc GPU cho thí nghiệm này. Dùng `requirements.txt` hiện có; phần mới dùng các thư viện thông dụng đã phục vụ baseline và biểu đồ: numpy, pandas, scipy, scikit-learn, matplotlib; đọc Parquet cần pyarrow.
 
 Nếu thiết lập từ đầu, chạy PowerShell tại thư mục dự án:
 
@@ -250,7 +301,7 @@ Ghi lại phiên bản từ môi trường đã chạy thành công:
 
 ## 7. Gói bàn giao cho Member 2
 
-Khi chạy xong mục 13 của notebook 03, có:
+Mục 13 của notebook 03 đã chạy thành công và tạo các tệp sau trên máy người thực hiện:
 
 ```text
 models/member2_handoff/
@@ -269,7 +320,9 @@ models/member2_handoff/
 models/member2_handoff.zip
 ```
 
-Gói gồm mô hình ItemCF baseline và biến thể temporal được chọn, module nạp/dự đoán độc lập với trạng thái notebook, các cấu hình và báo cáo tổng hợp. Notebook kiểm tra nạp lại hai mô hình và đối chiếu dự đoán cùng điểm số trước khi hoàn tất gói.
+Gói gồm mô hình ItemCF baseline và biến thể temporal được chọn, module nạp/dự đoán độc lập với trạng thái notebook, các cấu hình và báo cáo tổng hợp. Kết quả `handoff_summary.json` ghi nhận **43.656 người dùng**, **8.731.200 dòng**, gồm **4.365.600 dòng cho mỗi biến thể**, `zip_created = true` và `standalone_load_check = passed`. Notebook đã kiểm tra nạp lại hai mô hình và đối chiếu dự đoán cùng điểm số.
+
+Gói ZIP đầy đủ nằm trong `models/`, được loại khỏi Git và cần chia sẻ riêng cho Member 2. Repository chứa báo cáo tổng hợp và bản xem nhanh ứng viên, không chứa toàn bộ mô hình hoặc CSV ứng viên lớn. Việc tạo gói và việc Member 2 nhận gói là hai bước bàn giao riêng.
 
 ### 7.1. Phạm vi ứng viên và schema
 
@@ -323,15 +376,15 @@ Giữ hai thư mục mô hình cùng nhau: temporal dùng cosine và các ánh x
 | `models/`, gói handoff, bản sao lưu baseline | Chia sẻ riêng; nằm dưới thư mục đã được `.gitignore` loại |
 | `.venv/` | Tạo lại bằng requirements |
 
-Sau khi chạy xong, leader xem trước [báo cáo temporal](reports/temporal_cf/temporal_summary.md), [so sánh test](reports/temporal_cf/test_comparison.csv), [phân tích nhóm](reports/temporal_cf/personalization_groups.csv) và [thay đổi thứ hạng](reports/temporal_cf/rank_change_by_group.csv). Các liên kết này có nội dung khi kết quả đã được tạo và commit.
+Leader có thể xem ngay [báo cáo temporal](reports/temporal_cf/temporal_summary.md), [so sánh test](reports/temporal_cf/test_comparison.csv), [phân tích nhóm](reports/temporal_cf/personalization_groups.csv) và [thay đổi thứ hạng](reports/temporal_cf/rank_change_by_group.csv). Các tệp kết quả này đã có trong repository. Khi cập nhật README sau lần chạy này, chỉ cần commit và push README mới.
 
 ## 9. Tổng kết phần việc
 
-Baseline đã tạo được quy trình kiểm tra dữ liệu, chia tập, gợi ý Top-K, đánh giá và lưu mô hình có thể chạy lại. Kết quả trước cho thấy CF mở rộng danh mục được gợi ý nhưng còn phụ thuộc nhiều vào fallback và chưa có bằng chứng rõ về cải thiện NDCG@10.
+Đã hoàn thành phần thực nghiệm **Temporal Recommendation Baseline** gồm chuẩn bị dữ liệu, Most Popular, ItemCF, một phép thử time-decay trực tiếp vào điểm ứng viên, đánh giá test và phân tích cá nhân hóa theo độ dày lịch sử. Bốn notebook được giữ trong quy trình; baseline và các báo cáo trước vẫn là mốc đối chiếu.
 
-Notebook 03 mới cụ thể hóa yêu cầu Temporal Recommendation Baseline bằng một phép thử trọng số thời gian, giữ cùng cosine và quy trình so sánh. Nó cũng cung cấp phân tích theo mức độ lịch sử để tránh quy kết tác dụng temporal cho những người chỉ có một tương tác tích cực, và tạo đầu vào có thể nạp lại cho Member 2.
+Cấu hình chọn là **N = 10, h = 180 ngày**. Trên nhóm có từ 2 sản phẩm tích cực, thời gian làm thay đổi Top-10 ở **379/683 người dùng (55,49%)**. NDCG@10 toàn bộ tăng từ **0,00740466 lên 0,00740848**, nhưng khoảng tin cậy chứa 0 nên **chưa có bằng chứng rõ về cải thiện chất lượng gợi ý**. Đóng góp của thí nghiệm là kiểm chứng tác động thực tế của thời gian và chỉ ra giới hạn do dữ liệu rất thưa, không mặc định mô hình temporal sẽ tốt hơn.
 
-**Cần chạy notebook 03 trên dữ liệu đầy đủ để hoàn tất kết quả temporal và gói bàn giao.** Kết luận cuối phải theo số liệu từ lần chạy đó, bao gồm trường hợp temporal không cải thiện baseline.
+Đã tạo gói gồm hai mô hình, module nạp độc lập và **8.731.200 dòng ứng viên/điểm/thứ hạng** cho bước tiếp theo của Member 2; kiểm tra nạp lại thành công. Cần gửi riêng tệp `models/member2_handoff.zip` cho Member 2. Thuật toán giảm popularity bias không thuộc trách nhiệm chính của phần này; kết quả hiện tại chưa chứng minh hiệu quả doanh thu hay công bằng theo cửa hàng.
 
 ## Tài liệu tham khảo
 

@@ -84,6 +84,12 @@ Các metric có ký hiệu **(%)** hiển thị theo phần trăm; **NDCG** gi�
 | 1 sản phẩm | 1.850 | 0,00483546 | 0,00483546 | 0 | 0,00 |
 | Từ 2 sản phẩm | 683 | 0,00331668 | 0,00356070 | 379 | 55,49 |
 
+**Biểu đồ so sánh kết quả:**
+
+![NDCG@10 và tỷ lệ thay đổi danh sách Top-10 theo lịch sử người dùng](reports/temporal_cf/temporal_comparison.png)
+
+**Bên trái:** so sánh NDCG@10 giữa ba mô hình theo nhóm lịch sử tích cực. **Bên phải:** tỷ lệ danh sách Top-10 thay đổi khi thêm trọng số thời gian. Các nhóm được tính theo số sản phẩm tích cực khác nhau trong lịch sử huấn luyện.
+
 - **0 sản phẩm tích cực:** dùng sản phẩm phổ biến; **1 sản phẩm:** mọi điểm lọc cộng tác cùng nhân một hệ số dương nên thứ hạng giữ nguyên.
 - **Từ 2 sản phẩm:** trọng số thời gian có thể đổi đóng góp tương đối. Thực tế **379/683 người có danh sách 10 sản phẩm thay đổi (55,49%)**, xác nhận yếu tố thời gian đã tác động trực tiếp đến thuật toán.
 - Nhóm từ 2 sản phẩm chỉ chiếm **1,56%** người dùng test đủ điều kiện; đây là giới hạn lớn của cá nhân hóa trên bộ dữ liệu này.

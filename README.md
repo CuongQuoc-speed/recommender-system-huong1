@@ -3,7 +3,7 @@
 **Người thực hiện: Cường Quốc** · **Đã hoàn thành thực nghiệm**  
 Lần chạy: 24/10/2026 · Tổng hợp: 25/10/2026.
 
-> **Kết luận chính:** Đã xây dựng baseline và kiểm chứng tác động trực tiếp của thời gian lên ItemCF. Temporal làm đổi Top-10 ở **55,49% nhóm có từ 2 sản phẩm tích cực**, nhưng mức tăng NDCG@10 còn nhỏ và chưa có bằng chứng rõ về cải thiện. Mô hình, ứng viên và điểm được chuẩn bị cho Member 2 phát triển Hướng 2.
+> **Kết luận chính:** Đã xây dựng mô hình đối chiếu và kiểm chứng tác động trực tiếp của thời gian lên gợi ý. Mô hình có trọng số thời gian làm đổi danh sách 10 sản phẩm đầu ở **55,49% nhóm có từ 2 sản phẩm tích cực**, nhưng mức tăng chất lượng thứ hạng còn nhỏ và chưa có bằng chứng rõ về cải thiện. Mô hình, ứng viên và điểm được chuẩn bị cho Member 2 phát triển Hướng 2.
 
 ## 1. Bài toán, dữ liệu và mục tiêu
 
@@ -11,70 +11,88 @@ Mục tiêu chung là giúp cửa hàng tiếp cận khách hàng và tăng cơ 
 
 | Dữ liệu All Beauty đã làm sạch | Số lượng |
 | --- | ---: |
-| Review | 694.252 |
+| Số bản đánh giá sản phẩm | 694.252 |
 | Người dùng | 631.986 |
 | Sản phẩm có tương tác | 112.565 |
-| Người dùng chỉ có một review | 93,19% |
+| Người dùng chỉ có một bản đánh giá | 93,19% |
 
-Lịch sử quá ít làm hệ thống khó cá nhân hóa. Timestamp là thời điểm **review**; rating **≥ 4** được quy ước là tương tác tích cực.
+Lịch sử quá ít làm hệ thống khó cá nhân hóa. Thời gian ghi nhận là thời điểm **viết đánh giá**; điểm đánh giá **từ 4 sao trở lên** được quy ước là tương tác tích cực.
 
 ## 2. Phương pháp và cách đánh giá
 
 | Mô hình | Nội dung thực hiện |
 | --- | --- |
 | **Most Popular** | Xếp hạng theo số người dùng đánh giá tích cực của sản phẩm |
-| **ItemCF + Popular fallback** | Tính cosine từ các cặp user–item tích cực; gợi ý bằng tổng độ tương tự. Thiếu ứng viên thì bổ sung Most Popular |
-| **Time-decay ItemCF + Popular fallback** | Giữ cosine và fallback của ItemCF; nhân đóng góp của mỗi sản phẩm lịch sử với trọng số giảm theo tuổi review |
+| **Item-based Collaborative Filtering + Popular fallback** | Tính độ tương tự cosine từ các cặp người dùng–sản phẩm tích cực; gợi ý bằng tổng độ tương tự. Thiếu ứng viên thì bổ sung sản phẩm phổ biến |
+| **Time-decay ItemCF + Popular fallback** | Giữ độ tương tự và cách bổ sung sản phẩm phổ biến; giảm đóng góp của các đánh giá cũ trong lịch sử |
 
-Trọng số temporal là `w = 2 ** (-age_days / h)`: review gần đây đóng góp nhiều hơn. Với cặp user–item lặp, lấy timestamp review tích cực mới nhất trong lịch sử.
+Trọng số thời gian là `w = 2 ** (-age_days / h)`, trong đó `age_days` là tuổi đánh giá tính bằng ngày và `h` là chu kỳ bán rã. Đánh giá gần đây đóng góp nhiều hơn; nếu một cặp người dùng–sản phẩm lặp, lấy thời điểm đánh giá tích cực mới nhất trong lịch sử.
 
-- **Chia dữ liệu:** theo thời gian, khoảng 70% train / 20% validation / 10% test.
-- **Chọn tham số bằng validation:** thử N = 10, 20, 50, 100; h = 90, 180, 365 ngày. Kết quả chọn **N = 10, h = 180 ngày**, theo NDCG@10 toàn bộ người dùng đủ điều kiện.
-- **Đánh giá test:** học lại trên train + validation rồi cố định lịch sử; cùng người dùng, ground truth và catalog cho ba mô hình. Loại sản phẩm đã đánh giá; sản phẩm ngoài catalog lịch sử vẫn được giữ ở ground truth và tính miss nếu không gợi ý được.
-- **Độ dài danh sách:** K = 10 và 20; N là số lân cận, K là số sản phẩm trả về. Test không dùng để chọn tham số.
+- **Chia dữ liệu theo thời gian:** 70% tập huấn luyện, 20% tập chọn tham số và 10% tập kiểm tra cuối.
+- **Chọn tham số:** thử số lân cận là 10, 20, 50, 100 và chu kỳ bán rã là 90, 180, 365 ngày. Chọn **10 lân cận và chu kỳ 180 ngày** theo chất lượng thứ hạng của 10 sản phẩm đầu trên tập chọn tham số.
+- **Kiểm tra cuối:** huấn luyện lại bằng tập huấn luyện kết hợp tập chọn tham số rồi cố định lịch sử. Ba mô hình dùng cùng người dùng, danh mục và sản phẩm liên quan để đánh giá. Loại sản phẩm đã đánh giá; sản phẩm mới ngoài danh mục lịch sử vẫn được tính là trường hợp không gợi ý đúng nếu mô hình không đưa ra được.
+- **Độ dài danh sách gợi ý:** 10 và 20 sản phẩm. Tập kiểm tra cuối không được dùng để chọn tham số.
 
 ## 3. Kết quả và ý nghĩa
 
-**So sánh ba mô hình trên 43.656 người dùng test đủ điều kiện.** Đây là kết quả test sau khi chốt tham số; lưới validation dùng để chọn N và h được lưu riêng.
+**So sánh ba mô hình trên 43.656 người dùng đủ điều kiện trong tập kiểm tra cuối.** Các tham số đã được chốt trước đó bằng tập chọn tham số.
 
-| Mô hình | K | P@K (%) | R@K (%) | NDCG@K | Cov@K (%) | CF (%) | Fallback (%) |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Most Popular | 10 | 0,1636 | 1,6218 | 0,00732834 | 0,0107 | 0,0000 | 100,0000 |
-| ItemCF | 10 | 0,1645 | 1,6298 | 0,00740466 | 5,8720 | 2,6986 | 95,9387 |
-| Time-decay ItemCF | 10 | 0,1645 | 1,6298 | 0,00740848 | 5,8992 | 2,6986 | 95,9387 |
-| Most Popular | 20 | 0,1401 | 2,7770 | 0,01028960 | 0,0214 | 0,0000 | 100,0000 |
-| ItemCF | 20 | 0,1405 | 2,7850 | 0,01036184 | 6,3285 | 1,7439 | 95,9387 |
-| Time-decay ItemCF | 20 | 0,1406 | 2,7862 | 0,01036878 | 6,3537 | 1,7439 | 95,9387 |
+**Danh sách 10 sản phẩm gợi ý:**
 
-**Ý nghĩa các chỉ số:**
+| Metric | Most Popular | ItemCF + Popular fallback | Time-decay ItemCF + Popular fallback |
+| --- | ---: | ---: | ---: |
+| Precision@10 (%) | 0,1636 | 0,1645 | 0,1645 |
+| Recall@10 (%) | 1,6218 | 1,6298 | 1,6298 |
+| NDCG@10 (0–1) | 0,00732834 | 0,00740466 | 0,00740848 |
+| Catalog Coverage@10 (%) | 0,0107 | 5,8720 | 5,8992 |
+| CF Slot Fraction (%) | 0,0000 | 2,6986 | 2,6986 |
+| Popular-only List Fraction (%) | 100,0000 | 95,9387 | 95,9387 |
 
-- **P@K — Precision:** mức chính xác của danh sách Top-K; **R@K — Recall:** mức thu hồi sản phẩm liên quan.
-- **NDCG@K:** chất lượng thứ hạng; **Cov@K — Catalog coverage:** tỷ lệ sản phẩm trong catalog xuất hiện trong các danh sách.
-- **CF:** tỷ lệ vị trí do CF tạo; **Fallback:** tỷ lệ danh sách hoàn toàn lấy từ Most Popular. P, R, Cov, CF và Fallback hiển thị theo **%**; NDCG giữ thang **0–1**.
+**Danh sách 20 sản phẩm gợi ý:**
+
+| Metric | Most Popular | ItemCF + Popular fallback | Time-decay ItemCF + Popular fallback |
+| --- | ---: | ---: | ---: |
+| Precision@20 (%) | 0,1401 | 0,1405 | 0,1406 |
+| Recall@20 (%) | 2,7770 | 2,7850 | 2,7862 |
+| NDCG@20 (0–1) | 0,01028960 | 0,01036184 | 0,01036878 |
+| Catalog Coverage@20 (%) | 0,0214 | 6,3285 | 6,3537 |
+| CF Slot Fraction (%) | 0,0000 | 1,7439 | 1,7439 |
+| Popular-only List Fraction (%) | 100,0000 | 95,9387 | 95,9387 |
+
+**Cách đọc các chỉ số:**
+
+- **Precision:** số sản phẩm liên quan trong danh sách chia cho độ dài danh sách gợi ý.
+- **Recall:** số sản phẩm liên quan được gợi ý chia cho tổng số sản phẩm liên quan của người dùng trong tập đánh giá.
+- **NDCG — Normalized Discounted Cumulative Gain:** đánh giá vị trí của sản phẩm liên quan; sản phẩm phù hợp xuất hiện càng sớm thì điểm càng cao. Điểm nằm trong khoảng 0–1.
+- **Catalog Coverage:** tỷ lệ sản phẩm trong danh mục xuất hiện trong ít nhất một danh sách gợi ý.
+- **CF Slot Fraction:** cho biết bao nhiêu phần trăm vị trí gợi ý thực sự đến từ mô hình lọc cộng tác.
+- **Popular-only List Fraction:** cho biết bao nhiêu phần trăm danh sách không có ứng viên từ lọc cộng tác và được tạo hoàn toàn bằng sản phẩm phổ biến.
+
+Các metric có ký hiệu **(%)** hiển thị theo phần trăm; **NDCG** giữ thang **0–1**.
 
 **Nhận xét từ kết quả:**
 
-- Ở K = 10, NDCG tăng từ **0,00740466 → 0,00740848**; Precision và Recall không đổi. Temporal có tác động đến thứ hạng, nhưng mức tăng chất lượng còn rất nhỏ.
-- Độ phủ Top-10 tăng từ **5,8720% → 5,8992%**. Tỷ lệ vị trí CF không đổi; khoảng **95,94% danh sách vẫn hoàn toàn fallback** ở cả hai biến thể ItemCF.
-- Paired bootstrap theo người dùng, 1.000 lần, seed 42: chênh lệch NDCG@10 temporal trừ ItemCF có **CI95% [0,00000000; 0,00001527]**. Khoảng này chứa 0, nên **chưa có bằng chứng rõ temporal cải thiện NDCG@10**.
+- Với Top-10, **NDCG** tăng từ **0,00740466 → 0,00740848**; **Precision** và **Recall** không đổi. Trọng số thời gian có tác động đến thứ hạng, nhưng mức tăng chất lượng còn rất nhỏ.
+- **Catalog Coverage** của Top-10 tăng từ **5,8720% → 5,8992%**. **CF Slot Fraction** không đổi; **Popular-only List Fraction** vẫn khoảng **95,94%** ở cả hai biến thể ItemCF.
+- Lấy mẫu lặp theo cùng người dùng 1.000 lần (paired bootstrap): chênh lệch NDCG@10 giữa Time-decay ItemCF và ItemCF có **khoảng tin cậy 95% [0,00000000; 0,00001527]**. Khoảng này chứa 0, nên **chưa có bằng chứng rõ về cải thiện NDCG@10**.
 
-**Phân tích theo số sản phẩm tích cực khác nhau trong lịch sử train + validation:**
+**Phân tích theo số sản phẩm tích cực khác nhau trong lịch sử huấn luyện:**
 
-| Lịch sử tích cực | Người dùng | NDCG@10 ItemCF | NDCG@10 temporal | Top-10 thay đổi | Tỷ lệ (%) |
+| Lịch sử tích cực | Người dùng | NDCG@10 — ItemCF | NDCG@10 — Time-decay ItemCF | Top-10 thay đổi | Tỷ lệ (%) |
 | --- | --- | --- | --- | --- | --- |
 | 0 sản phẩm | 41.123 | 0,00758814 | 0,00758814 | 0 | 0,00 |
 | 1 sản phẩm | 1.850 | 0,00483546 | 0,00483546 | 0 | 0,00 |
 | Từ 2 sản phẩm | 683 | 0,00331668 | 0,00356070 | 379 | 55,49 |
 
-- **0 sản phẩm tích cực:** dùng Most Popular; **1 sản phẩm:** mọi điểm CF cùng nhân một hệ số dương nên thứ hạng giữ nguyên.
-- **Từ 2 sản phẩm:** trọng số thời gian có thể đổi đóng góp tương đối. Thực tế **379/683 người đổi Top-10 (55,49%)**, xác nhận yếu tố thời gian đã tác động trực tiếp đến thuật toán.
+- **0 sản phẩm tích cực:** dùng sản phẩm phổ biến; **1 sản phẩm:** mọi điểm lọc cộng tác cùng nhân một hệ số dương nên thứ hạng giữ nguyên.
+- **Từ 2 sản phẩm:** trọng số thời gian có thể đổi đóng góp tương đối. Thực tế **379/683 người có danh sách 10 sản phẩm thay đổi (55,49%)**, xác nhận yếu tố thời gian đã tác động trực tiếp đến thuật toán.
 - Nhóm từ 2 sản phẩm chỉ chiếm **1,56%** người dùng test đủ điều kiện; đây là giới hạn lớn của cá nhân hóa trên bộ dữ liệu này.
 
 Kết quả offline từ review chưa chứng minh tăng doanh thu hoặc lượt mua. Bảng số liệu đầy đủ và biểu đồ là đầu ra của lần chạy thực nghiệm.
 
 ## 4. Khoảng trống còn lại và định hướng sang Hướng 2
 
-- **Khoảng trống của Hướng 1:** ItemCF có trọng số thời gian vẫn phụ thuộc lịch sử tương tác, chưa khai thác thuộc tính và quan hệ sản phẩm. Dữ liệu thưa khiến mô hình còn phụ thuộc nhiều vào Most Popular; thay trọng số thời gian chưa bổ sung được tri thức sản phẩm để bù cho thiếu tương tác.
+- **Khoảng trống của Hướng 1:** ItemCF có trọng số thời gian vẫn phụ thuộc lịch sử tương tác, chưa khai thác thuộc tính và quan hệ sản phẩm. Dữ liệu thưa khiến mô hình còn phụ thuộc nhiều vào sản phẩm phổ biến; thay trọng số thời gian chưa bổ sung được tri thức sản phẩm để bù cho thiếu tương tác.
 - **Định hướng phát triển — Hướng 2:** Xây dựng **đồ thị tri thức từ metadata**, khai thác thương hiệu, danh mục, thuộc tính và quan hệ sản phẩm để bổ sung thông tin và nguồn ứng viên. Kết hợp với baseline, ứng viên và điểm của Hướng 1 để kiểm chứng hiệu quả trên cùng quy trình đánh giá.
 
 Hướng 1 dùng thời gian ở mức trọng số lịch sử, chưa biểu diễn quan hệ sản phẩm bằng đồ thị tri thức. Đây là giới hạn còn lại của baseline trong dự án và cơ sở phát triển tiếp sang Hướng 2.
@@ -83,10 +101,10 @@ Hướng 1 dùng thời gian ở mức trọng số lịch sử, chưa biểu di
 
 | Đầu ra | Kết quả |
 | --- | --- |
-| Quy trình | Đủ 4 notebook; giữ baseline và bổ sung temporal trong notebook 03 |
-| Mô hình | ItemCF baseline và Time-decay ItemCF; đã kiểm tra lưu/nạp lại |
-| Ứng viên và điểm | Tối đa 100 sản phẩm/người dùng/biến thể; **8.731.200 dòng**, có điểm, thứ hạng và nguồn CF/fallback |
-| Báo cáo | Đủ Precision, Recall, NDCG, độ phủ, tỷ lệ CF/fallback; phân tích nhóm, thay đổi thứ hạng, bootstrap và biểu đồ |
+| Quy trình | Đủ 4 notebook; giữ mô hình đối chiếu và bổ sung thí nghiệm thời gian trong notebook 03 |
+| Mô hình | ItemCF và Time-decay ItemCF; đã kiểm tra lưu/nạp lại |
+| Ứng viên và điểm | Tối đa 100 sản phẩm/người dùng/biến thể; **8.731.200 dòng**, có điểm, thứ hạng và nguồn từ lọc cộng tác hoặc sản phẩm phổ biến |
+| Báo cáo | Precision, Recall, NDCG, Catalog Coverage, CF Slot Fraction và Popular-only List Fraction; kèm phân tích nhóm, khoảng tin cậy và biểu đồ |
 
 **Gói đã tạo:** `models/member2_handoff.zip`, gồm hai mô hình, mã Python nạp độc lập, ứng viên/điểm/thứ hạng và cấu hình; kiểm tra nạp lại thành công. Gói cần gửi riêng cho Member 2. Phạm vi ứng viên là nhóm người dùng test đủ điều kiện; Hướng 2 sử dụng thêm dữ liệu và metadata chung.
 
